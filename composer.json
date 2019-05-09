@@ -1,0 +1,7 @@
+{
+    "require": {
+        "phlak/config": "^4.0",
+        "catfan/medoo": "^1.6",
+        "box/spout": "^2.7"
+    }
+}
