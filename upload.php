@@ -1,6 +1,6 @@
 <?php
 /**
-*    The class handling uploaded files
+*    The class handling uploaded files and storing the values into db
 */
 
 use PHLAK\Config\Config;
