@@ -6,7 +6,7 @@
 use PHLAK\Config\Config;
 use Medoo\Medoo;
 
-require 'database.php';
+require_once 'database.php';
 
 class Application {
     private $counts = [

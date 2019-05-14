@@ -1,25 +1,15 @@
 <?php
-/**
-*    The class handling uploaded files and storing the values into db
-*/
+require_once dirname(__DIR__) . '/akvizice/vendor/autoload.php'; // It must be called first
 
-use PHLAK\Config\Config;
-use Medoo\Medoo;
+require_once 'file.php';
+require_once 'data.php';
 
-class Upload {
-    /*
-    * Constructor
-    */
-    function Upload(){
-        //code...
-    }
+$uploaded_file = new File();
 
-    /*
-    * Function running the app
-    */
-    function execute(){
-        //code...
-    }
-}
+$uploaded_file->validateFile($_POST['file']);
+
+print_r($uploaded_file->getFileName());
+print_r($uploaded_file->getFilePath());
+
 
 ?>
