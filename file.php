@@ -12,6 +12,8 @@ class File{
 
     private $fileName;
     private static $uploaddir;
+    private $fileType;
+    private $dataType;
     private static $phpFileUploadErrors = array(
         0 => 'There is no error, the file uploaded with success',
         1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
@@ -59,6 +61,7 @@ class File{
     * This will work only in the upload script because of the $_FILES variable
     */
     function validateFile($upload_type){
+        
         $uploaded_file = $_FILES[$upload_type];
         if($uploaded_file['size'] !== 0 && $uploaded_file['tmp_name']){
             //extract filetype extension
@@ -68,7 +71,9 @@ class File{
                 error_log("File not validated: " . self::$phpFileUploadErrors[$uploaded_file['error']]);
                 die();
             }
+        $this->fileType = $ext;
         $this->fileName = $filename;
+        $this->dataType = $upload_type;
         }
         else{
             error_log("No file uploaded.");
@@ -77,7 +82,7 @@ class File{
     }
 
     /*
-    * Function running the app
+    * Returns the file name
     */
     function getFileName(){
         return $this->fileName;
@@ -88,6 +93,21 @@ class File{
     */
     function getFilePath(){
         return self::$uploaddir . "/" . $this->fileName;
+    }
+
+    /*
+    * Returns file type extension from the file
+    * WARNING: the extension is retrieved from the uploaded file name
+    */
+    function getFileType(){
+        return $this->fileType;
+    }
+
+    /*
+    * Returns file type extension from the file
+    */
+    function getDataType(){
+        return $this->dataType;
     }
     
     /*
