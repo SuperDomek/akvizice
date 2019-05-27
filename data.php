@@ -21,7 +21,6 @@ class Data {
     * Constructor
     */
     function Data(){
-        $db = Database::getConnection();
     }
 
     /*
@@ -44,7 +43,14 @@ class Data {
         }
         $reader->open($file->getFilePath());
 
+        $counters = array(
+            "inserted" => 0,
+            "updated" => 0,
+            "skipped" => 0
+        );
+
         foreach ($reader->getSheetIterator() as $sheet) {
+            $file_columns = array();
             foreach ($sheet->getRowIterator() as $index => $row) {
                 if($index == 1){ // first row = headers
                     $file_columns = $this->processHeader($row, $file->getDataType());
@@ -57,10 +63,20 @@ class Data {
                     echo "<br/>";
                     print_r($file_columns);
                 }
-                //print_r((int) $index . ": " . print_r($row));
-                //echo "<br/>";
+                else{
+                    $counter = $this->processRow($row, $file->getDataType(), $file_columns);
+                    $counters[$counter]++;
+                    //echo "<br/>";
+                    //print_r($row);
+                    //print_r((int) $index . ": " . print_r($row));
+                    //echo "<br/>";
+                }
+                
             }
         }
+        echo "<pre>";
+        print_r($counters);
+        echo "</pre>";
 
         $reader->close();
     }
@@ -114,8 +130,59 @@ class Data {
     * $headers Array Column names and their order in the data
     */
     function processRow($row, $dataType, $headers){
-        //code...
+        $db = Database::getConnection();
+        $import_array = array();
+        // fill the array with columns and their values
+        foreach($headers as $column => $index){
+            $import_array[$column] = $row[$index];
+        }
+        // test output
+        /*echo "<pre>";
+        echo "Import array";
+        print_r($import_array);
+        echo "</pre>";*/
         
+        if($dataType === "titles"){
+            // check whether data already exists
+            $exists = $db->has($dataType, [
+                "ADM_REC" => $import_array['ADM_REC']
+            ]);
+            $unchanged = $db->has($dataType, $import_array);
+            if (!$exists){
+                $data = $db->insert($dataType, $import_array);
+                /*echo "<pre>";
+                print_r("Inserted row: " . $import_array['ADM_REC']);
+                echo "</pre>";*/
+                $return = "inserted";
+            }
+            elseif ($exists && $unchanged){
+                // skip
+                /*echo "<pre>";
+                print_r("Skipping row: " . $import_array['ADM_REC']);
+                echo "</pre>";*/
+                $return = "skipped";
+            }
+            else{
+                $adm_rec['ADM_REC'] = $import_array['ADM_REC']; // saving row id
+                unset($import_array['ADM_REC']); // deleting id from the array
+                $data = $db->update($dataType, $import_array, $adm_rec);
+                /*echo "<pre>";
+                print_r("Updated row: " . $adm_rec['ADM_REC']);
+                echo "</pre>";*/
+                $return = "updated";
+            }
+        }
+        elseif ($dataType === "units"){
+
+        }
+        elseif ($dataType === "loans"){
+
+        }
+        else {
+            error_log("Error: Unknown datatype: " . $dataType);
+            die("Error: Unknown datatype: " . $dataType);
+        }
+        return $return;
     }
 }
 

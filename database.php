@@ -18,6 +18,7 @@ class Database {
         $config = new Config('config.ini');
         $db_conf = $config->get('mysql');
         $this->connection = new Medoo($db_conf);
+        $this->connection->query("SET CHARACTER SET utf8");
     }
 
 
