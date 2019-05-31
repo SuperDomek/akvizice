@@ -14,7 +14,7 @@ require_once 'file.php';
 class Data {
     
     private static $title_columns = array("ADM_REC", "CALLNO", "TITLE", "ISBN", "AUTHOR");
-    private static $units_columns = array("ADM_REC", "UNIT_ID", "STATUS", "ACQ_DATE", "UPDATE_DATE");
+    private static $units_columns = array("ADM_REC", "UNIT_ID","BARCODE", "CALL_NO", "STATUS", "ACQ_DATE", "DELETE_DATE");
     private static $loans_columns = array("TIMESTAMP", "ADM_REC", "UNIT_ID", "LOAN_DATE", "RETURN_DATE");
 
     /*
@@ -46,7 +46,8 @@ class Data {
         $counters = array(
             "inserted" => 0,
             "updated" => 0,
-            "skipped" => 0
+            "skipped" => 0,
+            "test" => 0
         );
 
         foreach ($reader->getSheetIterator() as $sheet) {
@@ -143,24 +144,20 @@ class Data {
         echo "</pre>";*/
         
         if($dataType === "titles"){
+            // optimalisation
+            $unchanged = $db->has($dataType, $import_array);
+            if ($unchanged)
+                $return = "skipped";
             // check whether data already exists
             $exists = $db->has($dataType, [
                 "ADM_REC" => $import_array['ADM_REC']
             ]);
-            $unchanged = $db->has($dataType, $import_array);
             if (!$exists){
                 $data = $db->insert($dataType, $import_array);
                 /*echo "<pre>";
                 print_r("Inserted row: " . $import_array['ADM_REC']);
                 echo "</pre>";*/
                 $return = "inserted";
-            }
-            elseif ($exists && $unchanged){
-                // skip
-                /*echo "<pre>";
-                print_r("Skipping row: " . $import_array['ADM_REC']);
-                echo "</pre>";*/
-                $return = "skipped";
             }
             else{
                 $adm_rec['ADM_REC'] = $import_array['ADM_REC']; // saving row id
@@ -173,10 +170,42 @@ class Data {
             }
         }
         elseif ($dataType === "units"){
+            // optimalisation
+            echo "<pre>";
+            print_r($import_array);
+            echo "</pre>";
 
+            // Nefunguje přeskočení už existujícího stejného záznamu
+            // asi je to tím, že je v DELETE_DATE null
+            $unchanged = $db->has($dataType, $import_array);
+            if ($unchanged)
+                $return = "skipped";
+            // check whether data already exists
+            $exists = $db->has($dataType, [
+                "ADM_REC" => $import_array['ADM_REC'],
+                "UNIT_ID" => $import_array['UNIT_ID']
+            ]);
+            if (!$exists){
+                $data = $db->insert($dataType, $import_array);
+                /*echo "<pre>";
+                print_r("Inserted row: " . $import_array['ADM_REC']);
+                echo "</pre>";*/
+                $return = "inserted";
+            }
+            else{
+                $where['ADM_REC'] = $import_array['ADM_REC']; // saving row id
+                $where['UNIT_ID'] = $import_array['UNIT_ID']; // saving row id
+                $import_array = \array_diff_key($import_array, $where);
+                $data = $db->update($dataType, $import_array, $where);
+                /*echo "<pre>";
+                print_r("Updated row: " . $adm_rec['ADM_REC']);
+                echo "</pre>";*/
+                $return = "updated";
+            }
+            //$return = "test";
         }
         elseif ($dataType === "loans"){
-
+            $return = "test";
         }
         else {
             error_log("Error: Unknown datatype: " . $dataType);

@@ -28,7 +28,7 @@ $counts = $application->getCounts();
         <p>Počet záznamů: <?php echo $counts['titles'];?></p>
         <form action="upload.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="file" value="titles"/>
-            <label for="titles">Vyberte soubor k aktualizaci seznamu titulů <i class="fas fa-info" title="File columns format:ADM_REC|CALLNO|TITLE|ISBN|AUTHOR; \n case-insensitive and order-insensitive; encoding UTF-8"></i></label>
+            <label for="titles">Vyberte soubor k aktualizaci seznamu titulů <i class="fas fa-info" title="File columns format:ADM_REC|CALLNO|TITLE|ISBN|AUTHOR &#013;case-insensitive and order-insensitive; encoding UTF-8"></i></label>
             <br/>
             <input type="file" name="titles" accept=".csv, .xlsx"/>
             <br/>
@@ -41,7 +41,7 @@ $counts = $application->getCounts();
         <p>Počet záznamů: <?php echo $counts['units'];?></p>
         <form action="upload.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="file" value="units"/>
-            <label for="units">Vyberte soubor k aktualizaci seznamu jednotek <i class="fas fa-info" title="File columns format:ADM_REC|unit_id|status|acq_date|update_date"></i></label>
+            <label for="units">Vyberte soubor k aktualizaci seznamu jednotek <i class="fas fa-info" title="File columns format:ADM_REC|unit_id|status|acq_date|delete_date"></i></label>
             <br/>
             <input type="file" name="units" accept=".csv, .xlsx"/>
             <br/>
