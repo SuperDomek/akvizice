@@ -46,7 +46,6 @@ class Data {
         $counters = array(
             "inserted" => 0,
             "updated" => 0,
-            "skipped" => 0,
             "test" => 0
         );
 
@@ -135,25 +134,18 @@ class Data {
         $import_array = array();
         // fill the array with columns and their values
         foreach($headers as $column => $index){
-            if(is_null($row[$index])){
-                $import_array[$column] = "0";    
-            }
-            else{
-                $import_array[$column] = $row[$index];
-            }
+            $import_array[$column] = $row[$index];
         }
         // test output
-        /*echo "<pre>";
+        echo "<pre>";
         echo "Import array";
         print_r($import_array);
-        echo "</pre>";*/
+        echo "</pre>";
         
         if($dataType === "titles"){
-            // optimalisation
-            $unchanged = $db->has($dataType, $import_array);
-            if ($unchanged)
-                $return = "skipped";
-            // check whether data already exists
+            // cannot solve the problem of querying for null value
+            //$unchanged = $db->has($dataType, $import_array);
+
             $exists = $db->has($dataType, [
                 "ADM_REC" => $import_array['ADM_REC']
             ]);
@@ -176,16 +168,10 @@ class Data {
         }
         elseif ($dataType === "units"){
             // optimalisation
-            echo "<pre>";
+            /*echo "<pre>";
             print_r($import_array);
-            echo "</pre>";
+            echo "</pre>";*/
 
-            // Nefunguje přeskočení už existujícího stejného záznamu
-            // asi je to tím, že je v DELETE_DATE null
-            $unchanged = $db->has($dataType, $import_array);
-            if ($unchanged)
-                $return = "skipped";
-            // check whether data already exists
             $exists = $db->has($dataType, [
                 "ADM_REC" => $import_array['ADM_REC'],
                 "UNIT_ID" => $import_array['UNIT_ID']
@@ -207,7 +193,6 @@ class Data {
                 echo "</pre>";*/
                 $return = "updated";
             }
-            //$return = "test";
         }
         elseif ($dataType === "loans"){
             $return = "test";
