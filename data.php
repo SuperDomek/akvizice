@@ -135,7 +135,12 @@ class Data {
         $import_array = array();
         // fill the array with columns and their values
         foreach($headers as $column => $index){
-            $import_array[$column] = $row[$index];
+            if(is_null($row[$index])){
+                $import_array[$column] = "0";    
+            }
+            else{
+                $import_array[$column] = $row[$index];
+            }
         }
         // test output
         /*echo "<pre>";
