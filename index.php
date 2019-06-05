@@ -23,6 +23,7 @@ $counts = $application->getCounts();
 </head>
 
 <body>
+<div id="forms-section">
     <div id="titles">
         <h1>Tituly</h1>
         <p>Počet záznamů: <?php echo $counts['titles'];?></p>
@@ -61,7 +62,15 @@ $counts = $application->getCounts();
             <input type="submit" value="Nahrát historii výpůjček"/>
         </form>
     </div>
-
+<hr/>
+    <div id="usage">
+        <h1>Výpočet využívanosti</h1>
+        <p>Počet záznamů: <?php echo $counts['usage'];?></p>
+        <form action="count.php" method="POST">
+            <input type="submit" value="Přepočítat využívanost"/>
+        </form>
+    </div>
+</div>
 </body>
 </html>
 

@@ -15,7 +15,7 @@ class Data {
     
     private static $title_columns = array("ADM_REC", "CALLNO", "TITLE", "ISBN", "AUTHOR");
     private static $units_columns = array("ADM_REC", "UNIT_ID","BARCODE", "CALL_NO", "STATUS", "ACQ_DATE", "DELETE_DATE");
-    private static $loans_columns = array("TIMESTAMP", "ADM_REC", "UNIT_ID", "LOAN_DATE", "RETURN_DATE");
+    private static $loans_columns = array("LOAN_ID", "ADM_REC", "UNIT_ID", "LOAN_DATE", "RETURN_DATE");
 
     /*
     * Constructor
@@ -29,6 +29,7 @@ class Data {
     */
     function processFile($file){
         $file_columns = array();
+        echo "Probíhá aktualizace databáze: " . $file->getDataType();
 
         switch ($file->getFileType()){
             case 'xlsx':
@@ -137,10 +138,10 @@ class Data {
             $import_array[$column] = $row[$index];
         }
         // test output
-        echo "<pre>";
+        /*echo "<pre>";
         echo "Import array";
         print_r($import_array);
-        echo "</pre>";
+        echo "</pre>";*/
         
         if($dataType === "titles"){
             // cannot solve the problem of querying for null value
@@ -167,7 +168,6 @@ class Data {
             }
         }
         elseif ($dataType === "units"){
-            // optimalisation
             /*echo "<pre>";
             print_r($import_array);
             echo "</pre>";*/
@@ -195,7 +195,25 @@ class Data {
             }
         }
         elseif ($dataType === "loans"){
-            $return = "test";
+            $exists = $db->has($dataType, [
+                "LOAN_ID" => $import_array['LOAN_ID']
+            ]);
+            if (!$exists){
+                $data = $db->insert($dataType, $import_array);
+                /*echo "<pre>";
+                print_r("Inserted row: " . $import_array['LOAN_ID']);
+                echo "</pre>";*/
+                $return = "inserted";
+            }
+            else{
+                $loan_id['LOAN_ID'] = $import_array['LOAN_ID']; // saving row id
+                unset($import_array['LOAN_ID']); // deleting id from the array
+                $data = $db->update($dataType, $import_array, $loan_id);
+                /*echo "<pre>";
+                print_r("Updated row: " . $adm_rec['LOAN_ID']);
+                echo "</pre>";*/
+                $return = "updated";
+            }
         }
         else {
             error_log("Error: Unknown datatype: " . $dataType);

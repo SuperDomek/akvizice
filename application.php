@@ -12,7 +12,8 @@ class Application {
     private $counts = [
         'titles' => 0,
         'units' => 0,
-        'loans' => 0
+        'loans' => 0,
+        'usage' => 0
     ];
     /*
     * Constructor
@@ -22,6 +23,7 @@ class Application {
         $this->counts['titles'] = $db->count('titles');
         $this->counts['units'] = $db->count('units');
         $this->counts['loans'] = $db->count('loans');
+        $this->counts['usage'] = $db->count('usage');
     }
 
     /*
