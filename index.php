@@ -26,7 +26,8 @@ $counts = $application->getCounts();
 <div id="forms-section">
     <div id="titles">
         <h1>Tituly</h1>
-        <p>Počet záznamů: <?php echo $counts['titles'];?></p>
+        <p>Počet záznamů: <?php echo $counts['titles']['total'];?></p>
+        <p>Počet titulů s jednotkami: <?php print_r($counts['titles']['active']);?></p>
         <form action="upload.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="file" value="titles"/>
             <label for="titles">Vyberte soubor k aktualizaci seznamu titulů <i class="fas fa-info" title="File columns format:ADM_REC|CALLNO|TITLE|ISBN|AUTHOR &#013;case-insensitive and order-insensitive; encoding UTF-8"></i></label>
@@ -39,7 +40,8 @@ $counts = $application->getCounts();
 <hr/>
     <div id="units">
         <h1>Jednotky</h1>
-        <p>Počet záznamů: <?php echo $counts['units'];?></p>
+        <p>Počet záznamů: <?php echo $counts['units']['total'];?></p>
+        <p>Počet aktivních jednotek: <?php echo $counts['units']['active'];?></p>
         <form action="upload.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="file" value="units"/>
             <label for="units">Vyberte soubor k aktualizaci seznamu jednotek <i class="fas fa-info" title="File columns format:ADM_REC|unit_id|status|acq_date|delete_date"></i></label>

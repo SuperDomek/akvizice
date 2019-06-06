@@ -10,20 +10,33 @@ require_once 'database.php';
 
 class Application {
     private $counts = [
-        'titles' => 0,
-        'units' => 0,
+        'titles' => array(),
+        'units' => array(),
         'loans' => 0,
-        'usage' => 0
+        'usage' => 0,
+        'titles_w_units' => 0
     ];
     /*
     * Constructor
     */
     function Application(){
         $db = Database::getConnection();
-        $this->counts['titles'] = $db->count('titles');
-        $this->counts['units'] = $db->count('units');
+        $this->counts['titles']['total'] = $db->count('titles');
+        $count_tmp = $db->select('titles', [
+            '[>]units' => ["ADM_REC" => "ADM_REC"]
+        ], [
+            "COUNT" => Medoo::raw('COUNT(DISTINCT(titles.ADM_REC))')
+        ], [
+            "units.DELETE_DATE" => 0
+        ]);
+        $this->counts['titles']['active'] = array_pop($count_tmp)['COUNT'];
+        $this->counts['units']['total'] = $db->count('units');
+        $this->counts['units']['active'] = $db->count('units', [
+            'DELETE_DATE' => 0
+        ]);
         $this->counts['loans'] = $db->count('loans');
         $this->counts['usage'] = $db->count('usage');
+        
     }
 
     /*
