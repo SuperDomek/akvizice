@@ -13,8 +13,7 @@ class Application {
         'titles' => array(),
         'units' => array(),
         'loans' => 0,
-        'usage' => 0,
-        'titles_w_units' => 0
+        'usage' => 0
     ];
     /*
     * Constructor

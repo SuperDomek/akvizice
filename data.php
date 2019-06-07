@@ -221,53 +221,7 @@ class Data {
         }
         return $return;
     }
-    /*
-    * Counts usage
-    * $year int year for which count the usage
-    */
-    function CountUsage($year){
-        $db = Database::getConnection();
-        $db->delete('usage', []);
-
-        // validate year
-        $year = (int) $year;
-        if (!($year > 2000 && $year < 2100)){
-            error_log("The year " . $year . "is not valid");
-            die("The year " . $year . "is not valid");
-        }
-
-        // generate the date array
-        $day = new DateInterval('P1D');
-        $format = 'Ymd';
-        $yearDates = array();
-        $start = date($format, mktime(0, 0, 12, 1, 1, $year));
-        $end = date($format, mktime(0, 0, 12, 12, 31, $year));
-        for($date = new DateTime($start); $date->format($format) <= $end; $date->add($day)){
-            $yearDates[] = $date->format($format);
-        }
-
-        //create array with active titles
-        /*$titles = $db->select('titles', [
-            '[>]units' => ["ADM_REC" => "ADM_REC"]
-        ], [
-            "COUNT" => Medoo::raw('COUNT(DISTINCT(titles.ADM_REC))')
-        ], [
-            "units.DELETE_DATE" => 0
-        ]);*/
-        echo "<pre>";
-        echo("Year: " . $year);
-        echo("Start: " . $start);
-        echo("End: " . $end);
-        print_r($yearDates);
-        echo "</pre>";
-
-
-        // cycle through date array and count the usage
-        foreach($yearDates as $date){
-
-        }
-
-    }
+    
 }
 
 ?>

@@ -68,8 +68,11 @@ $counts = $application->getCounts();
     <div id="usage">
         <h1>Výpočet využívanosti</h1>
         <p>Počet záznamů: <?php echo $counts['usage'];?></p>
-        <form action="count.php" method="POST">
-            <input type="submit" value="Přepočítat využívanost"/>
+        <form action="count.php" method="GET">
+            <!--<select name="count">
+                <option value="units">Units</option>
+            </select>-->
+            <input type="submit" value="Přepočítat"/>
         </form>
     </div>
 </div>
