@@ -79,6 +79,8 @@ class Dashboard{
             <input type="date" name="date_start"/>
             <input type="date" name="date_end"/>
         <br/>
+        
+        <br/>
         <input type="submit" value="Odeslat"/>
     </form>
 </div>
