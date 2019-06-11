@@ -9,7 +9,7 @@ require_once 'data.php';
 
 class Count{
 
-    private $dateFormat = "Ymd";
+    private $dateFormat = "Y-m-d";
 
     function Count(){
         // Loading configuration
@@ -95,20 +95,31 @@ class Count{
             echo("Loaned titles count: " . count($allLoans) . PHP_EOL);
             //print_r($titles);
             //print_r($allLoans);
+            $counter = 0;
             
             foreach($titles as $adm_rec => $units){
+                // if the title has any loans that day
                 if(array_key_exists($adm_rec, $allLoans))
                     $loans = $allLoans[$adm_rec];
-                else
-                    $loans = 0;
-                echo("Title " . $adm_rec . ": " . $loans . " / " . $units . PHP_EOL);
-                /*$db->insert('usage', [
-                    'date' => $date,
-                    'ADM_REC' => $title,
-                    'loans_count' => $loans,
-                    'unit_count' => $units
-                ]);*/
+                else { // no loans for given title => skip
+                    continue;
+                }
+
+                // if the status was changed from 04 or 05 after the loan to Grant then the unit is not listed,
+                // but the loan is 
+                // use the max number of units as loans => maximum usage
+                if($loans > $units){
+                    $loans = $units;
+                }
+                //echo("Title " . $adm_rec . ": " . $loans . " / " . $units . PHP_EOL);
+                $db->insert('usage', [
+                'date' => $date,
+                'ADM_REC' => $adm_rec,
+                'loans_count' => $loans,
+                'unit_count' => $units
+                ]);
             }
+            //echo "Jednotky s mrtvými výpůjčkami: " . $counter . PHP_EOL;
             echo "</pre>";
         }
             
@@ -189,29 +200,10 @@ $data = new Data();
 $count = new Count();
 $db = Database::getConnection();
 $start = date("Y-m-d", mktime(0, 0, 0, 1, 1, 2018));
-$end = date("Y-m-d", mktime(0, 0, 12, 1, 2, 2018));
+$end = date("Y-m-d", mktime(0, 0, 12, 12, 31, 2018));
 
-/*$test = $db->select('units', [
-    'ADM_REC',
-    'UNIT_ID'
-], [
-    'ACQ_DATE[<=]' => $start]
-);
 
-$test = $db->select('units', [
-    'ADM_REC',
-    'UNITS' => Medoo::raw('COUNT(UNIT_ID)')
-], [
-    'AND' => [
-        'ACQ_DATE[<=]' => $start,
-        'OR' => [
-            'DELETE_DATE' => 0,
-            'DELETE_DATE[>]' => $start
-        ]
-    ],
-    'GROUP' => 'ADM_REC'
-]);
-echo $start. PHP_EOL;
+/*echo $start. PHP_EOL;
 echo count($test) . PHP_EOL;
 var_dump($test);
 var_dump($db->error());*/
