@@ -75,6 +75,13 @@ $counts = $application->getCounts();
             <input type="submit" value="Přepočítat"/>
         </form>
     </div>
+<hr/>
+    <div id="dashboard">
+        <h1>Zobrazení dat</h1>
+        <p>
+            <a href="dashboard.php"><button>Přejít</button>
+        </p>
+    </div>
 </div>
 </body>
 </html>
