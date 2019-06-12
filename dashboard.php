@@ -57,6 +57,7 @@ class Dashboard{
                 $this->parameters['status'][STATUS_ABSENCNE] = true;
             }
             $this->parameters['granularity'] = $this->testInput($_GET["granularity"]);
+            $this->parameters['table'] = $this->testInput($_GET["table"]);
           }
         /*echo "<pre>";
         print_r($this->parameters);
@@ -184,6 +185,7 @@ $dashboard = new Dashboard();
         <br/>
         <label for="table">Zobrazit data pro:</label>
             <select name="table">
+                <option value="all" <?php echo ($dashboard->parameters['table'] == 'all') ? "selected" : "";?>>Všechno</option>
                 <option value="fully_loaned" <?php echo ($dashboard->parameters['table'] == 'fully_loaned') ? "selected" : "";?>>Plně vypůjčené</option>
             </select>
         <br/>
@@ -196,7 +198,7 @@ $dashboard = new Dashboard();
     <p>Počet aktivních titulů: <?php echo $dashboard->overview['active_titles'];?></p>
     <p>Počet aktivních jednotek: <?php echo $dashboard->overview['active_units'];?></p>
     <p>Průměrně vypůjčených jednotek: <?php echo $dashboard->overview['avg_loaned_units'];?></p>
-    <p>Průměrný počet 100% vypůjčených jednotek: <?php echo $dashboard->overview['avg_fully_loaned'];?></p>
+    <p>Průměrný počet 100% vypůjčených titulů: <?php echo $dashboard->overview['avg_fully_loaned'];?></p>
     </div>
 <hr/>
 <div id="data">
