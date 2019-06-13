@@ -197,8 +197,8 @@ $dashboard = new Dashboard();
     <h1>Přehled</h1>
     <p>Počet aktivních titulů: <?php echo $dashboard->overview['active_titles'];?></p>
     <p>Počet aktivních jednotek: <?php echo $dashboard->overview['active_units'];?></p>
-    <p>Průměrně vypůjčených jednotek: <?php echo $dashboard->overview['avg_loaned_units'];?></p>
-    <p>Průměrný počet 100% vypůjčených titulů: <?php echo $dashboard->overview['avg_fully_loaned'];?></p>
+    <p>Průměrně vypůjčených jednotek na titul: <?php echo $dashboard->overview['avg_loaned_units'];?></p>
+    <p>Průměrný počet 100% vypůjčených titulů za den: <?php echo $dashboard->overview['avg_fully_loaned'];?></p>
     </div>
 <hr/>
 <div id="data">
