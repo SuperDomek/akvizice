@@ -1,5 +1,7 @@
+<?php require_once 'header.php'?>
+
 <?php
-require_once dirname(__DIR__) . '/akvizice/vendor/autoload.php'; // It must be called first
+
 
 require_once 'file.php';
 require_once 'data.php';

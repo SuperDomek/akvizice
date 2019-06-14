@@ -1,13 +1,10 @@
+<?php require_once 'header.php'?>
+
 <?php
-require_once dirname(__DIR__) . '/akvizice/vendor/autoload.php'; // It must be called first
 
 use PHLAK\Config\Config;
 use Medoo\Medoo;
-
 require_once 'data.php';
-
-define('STATUS_SKRIPTA', 4);
-define('STATUS_ABSENCNE', 5);
 
 class Dashboard{
 
@@ -203,9 +200,11 @@ $dashboard = new Dashboard();
 <hr/>
 <div id="data">
     <h1>Data</h1>
-    <table>
+    <div id="table">
+        <table>
 
-    </table>
+        </table>
+    <div>
 </div>
 </body>
 </html>

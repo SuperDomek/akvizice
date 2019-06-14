@@ -1,3 +1,5 @@
+<?php require_once 'header.php'?>
+
 <?php
 /**
 *    This is the data handling class

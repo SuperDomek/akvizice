@@ -1,9 +1,9 @@
+<?php require_once 'header.php'?>
+
 <?php
-require_once dirname(__DIR__) . '/akvizice/vendor/autoload.php'; // It must be called first
 
 use PHLAK\Config\Config;
 use Medoo\Medoo;
-
 require_once 'file.php';
 require_once 'data.php';
 
@@ -58,6 +58,8 @@ class Count{
 
     /*
     * Counts usage for all active titles for dates given; purges the corresponding dates first
+    * The only place that stores statuses is units table; so the counts for statuses
+    * is based on the status that the unit currently has and not on the status of the unit at the time of the loan
     * $dates array year for which count the usage
     */
     function CountUsageAll($start_date, $end_date){
@@ -70,37 +72,29 @@ class Count{
             'date[<>]' => [$start_date, $end_date]    
         ]);
 
-        // validate year
-        /*$year = (int) $year;
-        if (!($year > 2000 && $year < 2100)){
-            error_log("The year " . $year . "is not valid");
-            die("The year " . $year . "is not valid");
-        }*/
-
-
         //create array with active titles
         
         echo("Start: " . $start_date . PHP_EOL);
         echo("End: " . $end_date . PHP_EOL);
-        
-
 
         // cycle through date array and count the usage
         foreach($dates_arr as $date){
+            echo "<pre>";
             $titles = $this->getAllActiveTitles($date);
             $allLoans = $this->getTitlesLoans($date);
-            echo "<pre>";
+            
             echo "Date: " . $date . PHP_EOL;
             echo("Active titles count: " . count($titles) . PHP_EOL);
             echo("Loaned titles count: " . count($allLoans) . PHP_EOL);
             //print_r($titles);
             //print_r($allLoans);
-            $counter = 0;
             
             foreach($titles as $adm_rec => $units){
+                //the title can have units with multiple statuses
+
                 // if the title has any loans that day
                 if(array_key_exists($adm_rec, $allLoans))
-                    $loans = $allLoans[$adm_rec];
+                    $loans = $allLoans[$adm_rec]; // here I save an array with statuses
                 else { // no loans for given title => skip
                     continue;
                 }
@@ -108,16 +102,23 @@ class Count{
                 // if the status was changed from 04 or 05 after the loan to Grant then the unit is not listed,
                 // but the loan is 
                 // use the max number of units as loans => maximum usage
-                if($loans > $units){
-                    $loans = $units;
-                }
+                
                 //echo("Title " . $adm_rec . ": " . $loans . " / " . $units . PHP_EOL);
-                $db->insert('usage', [
-                'date' => $date,
-                'ADM_REC' => $adm_rec,
-                'loans_count' => $loans,
-                'unit_count' => $units
-                ]);
+                foreach($loans as $status => $loans_status){
+                    $units_status = $units[$status];
+                    if($loans_status > $units_status){
+                        $loans_status = $units_status;
+                    }
+                    //echo("Title " . $adm_rec . " status " . $status . ": " . $loans_status . " / " . $units_status . PHP_EOL);
+                    $db->insert('usage', [
+                    'date' => $date,
+                    'ADM_REC' => $adm_rec,
+                    'status' => $status,
+                    'loans_count' => $loans_status,
+                    'unit_count' => $units_status
+                    ]);
+                }
+                
             }
             //echo "Jednotky s mrtvými výpůjčkami: " . $counter . PHP_EOL;
             echo "</pre>";
@@ -142,6 +143,7 @@ class Count{
         //create array with active titles
         $titles_temp = $db->select('units', [
             'ADM_REC',
+            'STATUS',
             'UNITS' => Medoo::raw('COUNT(UNIT_ID)')
         ], [
             'AND' => [
@@ -151,12 +153,17 @@ class Count{
                     'DELETE_DATE[>]' => $date
                 ]
             ],
-            'GROUP' => 'ADM_REC'
+            'GROUP' => ['ADM_REC', 'STATUS']
         ]);
-        // removing the first level of the array as I have only two columns
+        // removing the first level of the array and creating second level with pairs "STATUS" => "UNITS"
         $titles = array();
         foreach($titles_temp as $row){
-            $titles[(int)$row['ADM_REC']] = (int)$row['UNITS'];
+            $adm_rec = (int)$row['ADM_REC'];
+            
+            if(!isset($titles[$adm_rec])){ // check if this ADM_REC is already in the new array
+                $titles[$adm_rec] = array();
+            }
+            $titles[$adm_rec][(int)$row['STATUS']] = (int)$row['UNITS'];
         }
 
         return $titles;
@@ -175,22 +182,32 @@ class Count{
             die("The start date " . $date . " is invalid.");
         };
         $loans_temp = $db->select('loans', [
-            'ADM_REC',
-            'LOANS' => Medoo::raw('COUNT(UNIT_ID)')
+            '[>]units' => ['ADM_REC', 'UNIT_ID']
+        ], [
+            'loans.ADM_REC',
+            'units.status',
+            'LOANS' => Medoo::raw('COUNT(loans.UNIT_ID)')
         ], [
             'AND' => [
-                'LOAN_DATE[<=]' => $date,
+                'loans.LOAN_DATE[<=]' => $date,
                 'OR' => [
-                    'RETURN_DATE[>=]' => $date,
-                    'RETURN_DATE' => 0
-                ]
+                    'loans.RETURN_DATE[>=]' => $date,
+                    'loans.RETURN_DATE' => 0
+                ],
+                'units.STATUS[!]' => null // don't return loans data for units with actual status out of scope
             ],
-            'GROUP' => 'ADM_REC'
+            'GROUP' => ['loans.ADM_REC', 'units.STATUS']
         ]);
+        //print_r($loans_temp);
         // removing the first level of the array as I have only two columns
         $loans = array();
         foreach($loans_temp as $row){
-            $loans[(int)$row['ADM_REC']] = (int)$row['LOANS'];
+            $adm_rec = (int)$row['ADM_REC'];
+            
+            if(!isset($loans[$adm_rec])){ // check if this ADM_REC is already in the new array
+                $loans[$adm_rec] = array();
+            }
+            $loans[$adm_rec][(int)$row['status']] = (int)$row['LOANS'];
         }
         return $loans;
     }
