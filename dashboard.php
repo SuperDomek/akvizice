@@ -8,13 +8,13 @@ require_once 'data.php';
 
 class Dashboard{
 
-    private $dateFormat = "Y-m-d";
+    public $dateFormat = "Y-m-d";
     public $parameters = array(
         'start' => '2018-01-01',
         'end' => '2018-12-31',
         'status' => array(
-            STATUS_SKRIPTA => true,
-            STATUS_ABSENCNE => true
+            STATUS_ABSENCNE => true,
+            STATUS_SKRIPTA => true
         ),
         'granularity' => 'month',
         'table' => 'fully_loaned'
@@ -61,6 +61,11 @@ class Dashboard{
         echo "</pre>";*/
     }
 
+    /*
+    * Loading data for the overview section. Queries are status sensitive.
+    *
+    *
+    */
     function loadOverview(){
         $db = Database::getConnection();
         $count_tmp = $db->select('units', [
@@ -71,18 +76,12 @@ class Dashboard{
                     "DELETE_DATE" => 0,
                     'DELETE_DATE[>]' => $this->parameters['end']
                 ],
-                "ACQ_DATE[<=]" => $this->parameters['end']
+                "ACQ_DATE[<=]" => $this->parameters['end'],
+                'STATUS' => array_keys($this->parameters['status'], true, true)
             ]
         ]);
 
         $this->overview['active_titles'] = array_pop($count_tmp)['COUNT'];
-        
-        $status_arr = array();
-        foreach($this->parameters['status'] as $status => $set){
-            if($set){
-                $status_arr[] = $status;
-            }
-        }
 
         $active_units = $db->count('units', [
             'AND' => [
@@ -91,13 +90,16 @@ class Dashboard{
                     'DELETE_DATE[>]' => $this->parameters['end']
                 ],
                 'ACQ_DATE[<=]' => $this->parameters['end'],
-                'STATUS' => $status_arr
+                'STATUS' => array_keys($this->parameters['status'], true, true)
             ]
         ]);
         $this->overview['active_units'] = $active_units;
 
         $avg_loaned_units = $db->avg('usage', 'loans_count', [
-            'date[<>]' => [$this->parameters['start'], $this->parameters['end']]
+            'AND' => [
+                'date[<>]' => [$this->parameters['start'], $this->parameters['end']],
+                'STATUS' => array_keys($this->parameters['status'], true, true)
+            ]
         ]);
         $this->overview['avg_loaned_units'] = $avg_loaned_units;
         
@@ -109,6 +111,7 @@ class Dashboard{
             'AND' => [
                 'loans_count[=]unit_count',
                 'date[<>]' => [$this->parameters['start'], $this->parameters['end']],
+                'STATUS' => array_keys($this->parameters['status'], true, true)
             ],
             'GROUP' => 'date'
         ]);
@@ -142,6 +145,37 @@ class Dashboard{
         return $data;
     }
 
+     /*
+    * Renders HTML code for data table header
+    * $return string The html string for header
+    */
+    function renderTableHeader() {
+        $start = new DateTime($this->parameters['start']);
+        $end = new DateTime($this->parameters['end']);
+        $dataType = $this->parameters['table'];
+        $granularity = $this->parameters['granularity'];
+        $month = $start;
+        $header = "<th>ADM_REC</th>";
+        $header .= "<th>Název</th>";
+        $header .= "<th>Signatura</th>";
+        $header .= "<th>Počet jednotek</th>";
+
+        for($month = $start; ($start->diff($end)->m + ($start->diff($end)->y*12)) > 0; $month->modify('first day of next month')){
+            $header_col = "<th>";
+            $header_col .= $month->format('M-y');
+            $header_col .= "</th>";
+            $header .= $header_col;
+        }
+        // add last month
+        $header_col = "<th>";
+        $header_col .= $end->format('M-y');
+        $header_col .= "</th>";
+        $header .= $header_col;
+
+        return $header;
+
+    }
+
 }
 
 $dashboard = new Dashboard();
@@ -170,8 +204,8 @@ $dashboard = new Dashboard();
             <input type="date" name="date_end" value="<?php echo $dashboard->parameters['end'];?>"/>
         <br/>
         <label for="status">Status:</label>
-            <input type="checkbox" name="status[]" value="04" <?php echo ($dashboard->parameters['status'][STATUS_SKRIPTA]) ? "checked" : "";?>>Skripta</input>
-            <input type="checkbox" name="status[]" value="05" <?php echo ($dashboard->parameters['status'][STATUS_ABSENCNE]) ? "checked" : "";?>>Absenčně</input>
+            <input type="checkbox" name="status[]" value="04" <?php echo ($dashboard->parameters['status'][STATUS_ABSENCNE]) ? "checked" : "";?>>Absenčně</input>
+            <input type="checkbox" name="status[]" value="05" <?php echo ($dashboard->parameters['status'][STATUS_SKRIPTA]) ? "checked" : "";?>>Skripta</input>
         <br/>
         <label for="granularity">Granularita:</label>
             <select name="granularity">
@@ -200,11 +234,18 @@ $dashboard = new Dashboard();
 <hr/>
 <div id="data">
     <h1>Data</h1>
-    <div id="table">
+    <div id="container">
         <table>
+            <thead>
+                <tr>
+                    <?php print_r($dashboard->renderTableHeader());?>
+                </tr>
+            </thead>
+            <tbody>
 
+            </tbody>
         </table>
-    <div>
+    </div>
 </div>
 </body>
 </html>
