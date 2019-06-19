@@ -1,0 +1,16 @@
+[mysql]
+
+database_type = "mysql"
+database_name = "database_name"
+server = "localhost"
+username = "db_user_name"
+password = "db_user_password"
+charset = "utf-8"
+
+[files]
+
+uploaddir = "./uploads"
+
+[format]
+
+dateformat = "Y-m-d"

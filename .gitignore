@@ -1,6 +1,6 @@
 # Ignore the config file
 
-/config.*
+/config.ini
 /uploads*
 /*.xlsx
 /*.sql
