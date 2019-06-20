@@ -25,6 +25,7 @@ class Dashboard{
         'avg_fully_loaned' => 0, // status specific
         'avg_loaned_units' => 0 // status specific
     );
+    public $tableHeader = array();
 
     function Dashboard(){
         // Loading configuration
@@ -34,6 +35,7 @@ class Dashboard{
         if(isset($_GET))
             $this->loadParameters();
         $this->loadOverview();
+        $this->getTimeDataHeader();
     }
 
     function loadParameters(){
@@ -150,30 +152,135 @@ class Dashboard{
     * $return string The html string for header
     */
     function renderTableHeader() {
-        $start = new DateTime($this->parameters['start']);
-        $end = new DateTime($this->parameters['end']);
-        $dataType = $this->parameters['table'];
-        $granularity = $this->parameters['granularity'];
-        $month = $start;
-        $header = "<th>ADM_REC</th>";
-        $header .= "<th>Název</th>";
-        $header .= "<th>Signatura</th>";
-        $header .= "<th>Počet jednotek</th>";
-
-        for($month = $start; ($start->diff($end)->m + ($start->diff($end)->y*12)) > 0; $month->modify('first day of next month')){
-            $header_col = "<th>";
-            $header_col .= $month->format('M-y');
-            $header_col .= "</th>";
-            $header .= $header_col;
+        // First row
+        $header = "<tr>";
+        $headerArr = $this->tableHeader;
+        //$size = serialize($data);
+        //echo strlen($size) . " bytes" . PHP_EOL;
+        foreach($headerArr['information'] as $column){
+            $header .= '<th rowspan="2">' . $column . "</th>";
         }
-        // add last month
-        $header_col = "<th>";
-        $header_col .= $end->format('M-y');
-        $header_col .= "</th>";
-        $header .= $header_col;
-
+        foreach($headerArr['stats'] as $date => $columns){
+            $header .= '<th colspan="2">' . $date . "</th>";
+        }
+        $header .= "</tr>";
+        // Second row
+        $header .= "<tr>";
+        foreach($headerArr['stats'] as $date => $columns){
+            foreach($columns as $column){
+                $header .= "<th>" . $column . "</th>";
+            }
+        }
+        $header .= "</tr>";
         return $header;
+    }
 
+    function renderTableBody(){
+
+        $datas = $this->getData();
+        $informationHeader = $this->tableHeader['information'];
+        unset($informationHeader[array_search('ADM_REC', $informationHeader)]);
+        $statsHeader = $this->tableHeader['stats'];
+        $body = "";
+        // view for loans
+        foreach($datas as $adm_rec => $data){
+            $row = "<tr>";
+            $row .= "<th>" . $adm_rec . "</th>";
+            
+            foreach($informationHeader as $column){
+                $row .= "<td>" . $data[$column] . "</td>";
+            }
+            foreach($statsHeader as $date => $columns){
+                if(isset($data['STATS'][$date])){
+                    foreach($columns as $column){
+                        $row .= "<td>" . $data['STATS'][$date][$column] . " %</td>";
+                    }
+                }
+                else{
+                    $row .= "<td>-</td>";
+                    $row .= "<td>-</td>";
+                }
+            }
+            $row .= "</tr>";
+            $body .= $row . PHP_EOL;
+        }
+        return $body;
+    }
+
+    /*
+    * Based on the dates from parameters creates an array of arrays for each time point
+    * return array An array where the key is Data point string and value an empty array
+    */
+    function getTimeDataHeader(){
+        $granularity = $this->parameters['granularity'];
+        if($granularity === 'month'){
+            $month = new DateTime($this->parameters['start']); // initialization
+            $end = new DateTime($this->parameters['end']);
+            $tableHeader = array();
+            $tableHeader['information'][] = 'ADM_REC';
+            $tableHeader['information'][] = 'TITLE';
+            $tableHeader['information'][] = 'CALLNO';
+            $tableHeader['information'][] = 'UNITS';
+            for($month; ($month->diff($end)->m + ($month->diff($end)->y*12)) > 0; $month->modify('first day of next month')){
+                $tableHeader['stats'][$month->format('Y-m')][] = 'AVRG';
+                $tableHeader['stats'][$month->format('Y-m')][] = 'STD';
+            }
+            $tableHeader['stats'][$end->format('Y-m')][] = 'AVRG';
+            $tableHeader['stats'][$end->format('Y-m')][] = 'STD';
+        }
+        /*echo "<pre>";
+        print_r($tableHeader);
+        echo "</pre>";*/
+        $this->tableHeader = $tableHeader;
+        
+
+        return;
+    }
+    /*
+    * Fills loan data into the data array with prefilled header
+    * dataHeader array The result of getDataHeader function
+    * return array An array where the key is a Data point string and value an array with data to show
+    */
+    function getData(){
+        $db = Database::getConnection();
+        $select = $db->select('usage',[
+            '[>]titles' => 'ADM_REC'
+        ],[
+           'DATE' => Medoo::raw('substr(date, 1, 7)'),
+           'usage.ADM_REC (ADM_REC)',
+           'titles.TITLE',
+           'titles.CALLNO',
+           'status',
+           'AVRG_UNITS' => Medoo::raw('AVG(unit_count)'),
+           'AVRG_LOANED' => Medoo::raw('AVG(loans_count/unit_count) * 100'),
+           'STD_DEV' => Medoo::raw('STDDEV_SAMP(loans_count/unit_count) * 2 * 100')
+        ],[
+            'AND' => [
+                'date[<>]' => [$this->parameters['start'], $this->parameters['end']],
+                'STATUS' => array_keys($this->parameters['status'], true, true)
+            ],
+            'GROUP' => Medoo::raw('substr(date, 1,7),ADM_REC,status')
+        ]);
+
+        // transform the select rows into a datatable
+        $data = array();
+        foreach($select as $row){
+            $adm_rec = (int)$row['ADM_REC'];
+            if(!isset($data[$adm_rec])){
+                $data[$adm_rec] = array();
+                $data[$adm_rec]['TITLE'] = $row['TITLE'];
+                $data[$adm_rec]['CALLNO'] = $row['CALLNO'];
+                $data[$adm_rec]['UNITS'] = (int)$row['AVRG_UNITS'];
+                $data[$adm_rec]['STATS'] = array();
+            }
+            $data[$adm_rec]['STATS'][$row['DATE']]['AVRG'] = round($row['AVRG_LOANED']);
+            $data[$adm_rec]['STATS'][$row['DATE']]['STD'] = round($row['STD_DEV'],1);
+        }
+        /*echo "<pre>";
+        //print_r($select);
+        //print_r($data);
+        echo "</pre>";*/
+        return $data;
     }
 
 }
@@ -237,12 +344,10 @@ $dashboard = new Dashboard();
     <div id="container">
         <table>
             <thead>
-                <tr>
-                    <?php print_r($dashboard->renderTableHeader());?>
-                </tr>
+                <?php print_r($dashboard->renderTableHeader());?>
             </thead>
             <tbody>
-
+                <?php print_r($dashboard->renderTableBody());?>
             </tbody>
         </table>
     </div>
