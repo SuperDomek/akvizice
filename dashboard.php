@@ -17,7 +17,7 @@ class Dashboard{
             STATUS_SKRIPTA => true
         ),
         'granularity' => 'month',
-        'table' => 'fully_loaned'
+        'table' => 'all'
     );
     public $overview = array(
         'active_titles' => 0, // status not specific
@@ -182,23 +182,28 @@ class Dashboard{
         unset($informationHeader[array_search('ADM_REC', $informationHeader)]);
         $statsHeader = $this->tableHeader['stats'];
         $body = "";
+        // first summary row
+        $body .= "<tr>";
+        $body .= '<th colspan="2">Celkem titulů</th>';
+        $body .= "<td>" . count($datas) . "</td>";
+        $body .= "</tr>";
         // view for loans
         foreach($datas as $adm_rec => $data){
             $row = "<tr>";
             $row .= "<th>" . $adm_rec . "</th>";
             
             foreach($informationHeader as $column){
-                $row .= "<td>" . $data[$column] . "</td>";
+                $row .= '<td class="information">' . $data[$column] . "</td>";
             }
             foreach($statsHeader as $date => $columns){
                 if(isset($data['STATS'][$date])){
                     foreach($columns as $column){
-                        $row .= "<td>" . $data['STATS'][$date][$column] . " %</td>";
+                        $row .= '<td class="stats">' . $data['STATS'][$date][$column] . " %</td>";
                     }
                 }
                 else{
-                    $row .= "<td>-</td>";
-                    $row .= "<td>-</td>";
+                    $row .= '<td class="stats">-</td>';
+                    $row .= '<td class="stats">-</td>';
                 }
             }
             $row .= "</tr>";
@@ -243,24 +248,42 @@ class Dashboard{
     */
     function getData(){
         $db = Database::getConnection();
-        $select = $db->select('usage',[
-            '[>]titles' => 'ADM_REC'
-        ],[
-           'DATE' => Medoo::raw('substr(date, 1, 7)'),
-           'usage.ADM_REC (ADM_REC)',
-           'titles.TITLE',
-           'titles.CALLNO',
-           'status',
-           'AVRG_UNITS' => Medoo::raw('AVG(unit_count)'),
-           'AVRG_LOANED' => Medoo::raw('AVG(loans_count/unit_count) * 100'),
-           'STD_DEV' => Medoo::raw('STDDEV_SAMP(loans_count/unit_count) * 2 * 100')
-        ],[
+        $filter = array(); // array for the select HAVING in case filter is on
+        $where = array(
             'AND' => [
                 'date[<>]' => [$this->parameters['start'], $this->parameters['end']],
                 'STATUS' => array_keys($this->parameters['status'], true, true)
             ],
             'GROUP' => Medoo::raw('substr(date, 1,7),ADM_REC,status')
-        ]);
+        );
+        switch($this->parameters['table']){
+            case 'all':
+                unset($filter);
+                break;
+            case '90':
+                $filter['AVRG_LOANED[>=]'] = 90;
+                $where['HAVING'] = $filter;
+                break;
+            case '10':
+                $filter['AVRG_LOANED[<=]'] = 10;
+                $where['HAVING'] = $filter;
+                break;
+            default:
+                error_log("Unrecognized table filter parameter? " . $this->parameters['table']);
+                die("Unrecognized table filter parameter? " . $this->parameters['table']);
+        }
+        $select = $db->select('usage',[
+            '[>]titles' => 'ADM_REC'
+        ],[
+           'DATE' => Medoo::raw('substr(date, 1, 7)'),
+           'usage.ADM_REC (ADM_REC)',
+           'titles.TITLE (TITLE)',
+           'titles.CALLNO (CALLNO)',
+           'status',
+           'AVRG_UNITS' => Medoo::raw('AVG(unit_count)'),
+           'AVRG_LOANED' => Medoo::raw('AVG(loans_count/unit_count) * 100'),
+           'STD_DEV' => Medoo::raw('STDDEV_SAMP(loans_count/unit_count) * 2 * 100')
+        ], $where);
 
         // transform the select rows into a datatable
         $data = array();
@@ -316,15 +339,16 @@ $dashboard = new Dashboard();
         <br/>
         <label for="granularity">Granularita:</label>
             <select name="granularity">
-                <option value="day" <?php echo ($dashboard->parameters['granularity'] == 'day') ? "selected" : "";?>>Den</option>
+                <!--<option value="day" <?php echo ($dashboard->parameters['granularity'] == 'day') ? "selected" : "";?>>Den</option>-->
                 <option value="month" <?php echo ($dashboard->parameters['granularity'] == 'month') ? "selected" : "";?>>Měsíc</option>
-                <option value="year" <?php echo ($dashboard->parameters['granularity'] == 'year') ? "selected" : "";?>>Rok</option>
+                <!--<option value="year" <?php echo ($dashboard->parameters['granularity'] == 'year') ? "selected" : "";?>>Rok</option>-->
             </select>
         <br/>
-        <label for="table">Zobrazit data pro:</label>
+        <label for="table">Filtrovat data na:</label>
             <select name="table">
                 <option value="all" <?php echo ($dashboard->parameters['table'] == 'all') ? "selected" : "";?>>Všechno</option>
-                <option value="fully_loaned" <?php echo ($dashboard->parameters['table'] == 'fully_loaned') ? "selected" : "";?>>Plně vypůjčené</option>
+                <option value="90" <?php echo ($dashboard->parameters['table'] == '90') ? "selected" : "";?>>Plně vypůjčené (90+ %)</option>
+                <option value="10" <?php echo ($dashboard->parameters['table'] == '10') ? "selected" : "";?>>Málo půjčované (10- %)</option>
             </select>
         <br/>
         <input type="submit" value="Odeslat"/>

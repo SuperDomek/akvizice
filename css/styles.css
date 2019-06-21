@@ -36,3 +36,6 @@ body{
 #data td, th {
     padding: 0.25em;
 }
+.stats:nth-child(even){
+    border-right: 1px solid #CCC;
+}
