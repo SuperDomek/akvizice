@@ -26,6 +26,7 @@ class Dashboard{
         'avg_loaned_units' => 0 // status specific
     );
     public $tableHeader = array();
+    public $activeTitles = array();
 
     function Dashboard(){
         // Loading configuration
@@ -70,8 +71,11 @@ class Dashboard{
     */
     function loadOverview(){
         $db = Database::getConnection();
-        $count_tmp = $db->select('units', [
-            "COUNT" => Medoo::raw('COUNT(DISTINCT(ADM_REC))')
+
+        $active_titles_rows = $db->select('units', [
+            'ADM_REC',
+            'STATUS',
+            'COUNT' => Medoo::raw('COUNT(UNIT_ID)')
         ], [
             'AND' => [
                 'OR' => [
@@ -80,22 +84,29 @@ class Dashboard{
                 ],
                 "ACQ_DATE[<=]" => $this->parameters['end'],
                 'STATUS' => array_keys($this->parameters['status'], true, true)
-            ]
+            ],
+            'GROUP' => ['ADM_REC', 'STATUS']
         ]);
 
-        $this->overview['active_titles'] = array_pop($count_tmp)['COUNT'];
+        $active_titles = array();
+        foreach($active_titles_rows as $row){
+            $adm_rec = (int)$row['ADM_REC'];
+                if(!isset($active_titles[$adm_rec])){
+                    $active_titles[$adm_rec] = array();
+                }
+                $active_titles[$adm_rec][(int)$row['STATUS']] = (int) $row['COUNT'];
+        }
 
-        $active_units = $db->count('units', [
-            'AND' => [
-                'OR' => [
-                    'DELETE_DATE' => 0,
-                    'DELETE_DATE[>]' => $this->parameters['end']
-                ],
-                'ACQ_DATE[<=]' => $this->parameters['end'],
-                'STATUS' => array_keys($this->parameters['status'], true, true)
-            ]
-        ]);
-        $this->overview['active_units'] = $active_units;
+        $this->overview['active_titles'] = count($active_titles);
+        $this->activeTitles = $active_titles;
+
+        $active_units_count = 0;
+        foreach($active_titles as $adm_rec => $status_arr){
+            foreach($status_arr as $status => $units){
+                $active_units_count += $units;
+            }
+        }
+        $this->overview['active_units'] = $active_units_count;
 
         $avg_loaned_units = $db->avg('usage', 'loans_count', [
             'AND' => [
@@ -132,7 +143,9 @@ class Dashboard{
         $this->overview['avg_fully_loaned'] = $avg_fully_loaned;
         
         /*echo "<pre>";
-        print_r($this->overview);
+        //print_r($this->overview);
+        //print_r($active_titles);
+        //print_r($active_units_count);
         echo "</pre>";*/
     }
 
@@ -157,7 +170,7 @@ class Dashboard{
         $headerArr = $this->tableHeader;
         //$size = serialize($data);
         //echo strlen($size) . " bytes" . PHP_EOL;
-        foreach($headerArr['information'] as $column){
+        foreach($headerArr['information'] as $column => $default){
             $header .= '<th rowspan="2">' . $column . "</th>";
         }
         foreach($headerArr['stats'] as $date => $columns){
@@ -167,7 +180,7 @@ class Dashboard{
         // Second row
         $header .= "<tr>";
         foreach($headerArr['stats'] as $date => $columns){
-            foreach($columns as $column){
+            foreach($columns as $column => $default){
                 $header .= "<th>" . $column . "</th>";
             }
         }
@@ -192,12 +205,12 @@ class Dashboard{
             $row = "<tr>";
             $row .= "<th>" . $adm_rec . "</th>";
             
-            foreach($informationHeader as $column){
+            foreach($informationHeader as $column => $default){
                 $row .= '<td class="information">' . $data[$column] . "</td>";
             }
             foreach($statsHeader as $date => $columns){
                 if(isset($data['STATS'][$date])){
-                    foreach($columns as $column){
+                    foreach($columns as $column => $default){
                         $row .= '<td class="stats">' . $data['STATS'][$date][$column] . " %</td>";
                     }
                 }
@@ -222,16 +235,16 @@ class Dashboard{
             $month = new DateTime($this->parameters['start']); // initialization
             $end = new DateTime($this->parameters['end']);
             $tableHeader = array();
-            $tableHeader['information'][] = 'ADM_REC';
-            $tableHeader['information'][] = 'TITLE';
-            $tableHeader['information'][] = 'CALLNO';
-            $tableHeader['information'][] = 'UNITS';
+            $tableHeader['information']['ADM_REC'] = 0;
+            $tableHeader['information']['TITLE'] = '';
+            $tableHeader['information']['CALLNO'] = '';
+            $tableHeader['information']['UNITS'] = 0;
             for($month; ($month->diff($end)->m + ($month->diff($end)->y*12)) > 0; $month->modify('first day of next month')){
-                $tableHeader['stats'][$month->format('Y-m')][] = 'AVRG';
-                $tableHeader['stats'][$month->format('Y-m')][] = 'STD';
+                $tableHeader['stats'][$month->format('Y-m')]['AVRG'] = 0;
+                $tableHeader['stats'][$month->format('Y-m')]['STD'] = 0;
             }
-            $tableHeader['stats'][$end->format('Y-m')][] = 'AVRG';
-            $tableHeader['stats'][$end->format('Y-m')][] = 'STD';
+            $tableHeader['stats'][$end->format('Y-m')]['AVRG'] = 0;
+            $tableHeader['stats'][$end->format('Y-m')]['STD'] = 0;
         }
         /*echo "<pre>";
         print_r($tableHeader);
@@ -248,6 +261,7 @@ class Dashboard{
     */
     function getData(){
         $db = Database::getConnection();
+        $show_zero_usage = false;
         $filter = array(); // array for the select HAVING in case filter is on
         $where = array(
             'AND' => [
@@ -259,6 +273,7 @@ class Dashboard{
         switch($this->parameters['table']){
             case 'all':
                 unset($filter);
+                $show_zero_usage = true;
                 break;
             case '90':
                 $filter['AVRG_LOANED[>=]'] = 90;
@@ -267,6 +282,7 @@ class Dashboard{
             case '10':
                 $filter['AVRG_LOANED[<=]'] = 10;
                 $where['HAVING'] = $filter;
+                $show_zero_usage = true;
                 break;
             default:
                 error_log("Unrecognized table filter parameter? " . $this->parameters['table']);
@@ -294,15 +310,32 @@ class Dashboard{
                 $data[$adm_rec]['TITLE'] = $row['TITLE'];
                 $data[$adm_rec]['CALLNO'] = $row['CALLNO'];
                 $data[$adm_rec]['UNITS'] = (int)$row['AVRG_UNITS'];
-                $data[$adm_rec]['STATS'] = array();
+                $data[$adm_rec]['STATS'] = $this->tableHeader['stats'];
             }
             $data[$adm_rec]['STATS'][$row['DATE']]['AVRG'] = round($row['AVRG_LOANED']);
             $data[$adm_rec]['STATS'][$row['DATE']]['STD'] = round($row['STD_DEV'],1);
         }
-        /*echo "<pre>";
+
+        unset($select);
+        // fill zero values for titles with active units but zero usage
+        // these are not pulled with select from usage table (they don't have a record)
+        if($show_zero_usage){
+            foreach($this->activeTitles as $adm_rec => $status){
+                if(!isset($data[$adm_rec])){
+                    $data[$adm_rec] = array();
+                    $data[$adm_rec]['TITLE'] = $row['TITLE'];
+                    $data[$adm_rec]['CALLNO'] = $row['CALLNO'];
+                    $data[$adm_rec]['UNITS'] = (int)$row['AVRG_UNITS'];
+                    $data[$adm_rec]['STATS'] = $this->tableHeader['stats'];
+                }
+            }
+        }
+
+        echo "<pre>";
         //print_r($select);
+        //print_r($this->tableHeader);
         //print_r($data);
-        echo "</pre>";*/
+        echo "</pre>";
         return $data;
     }
 
