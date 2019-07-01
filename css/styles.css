@@ -39,3 +39,7 @@ body{
 .stats:nth-child(even){
     border-right: 1px solid #CCC;
 }
+
+.sortable {
+    cursor: pointer;
+}

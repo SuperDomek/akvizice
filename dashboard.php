@@ -30,7 +30,7 @@ class Dashboard{
 
     function Dashboard(){
         // Loading configuration
-        $config = new Config('config.ini');
+        $config = new Config('FEosu261BP/config.ini');
         $format_conf = $config->get('format');
         $this->dateFormat = $format_conf['dateformat'];
         if(isset($_GET))
@@ -171,7 +171,7 @@ class Dashboard{
         //$size = serialize($data);
         //echo strlen($size) . " bytes" . PHP_EOL;
         foreach($headerArr['information'] as $column => $default){
-            $header .= '<th rowspan="2">' . $column . "</th>";
+            $header .= '<th rowspan="2" class="sortable">' . $column . "</th>";
         }
         foreach($headerArr['stats'] as $date => $columns){
             $header .= '<th colspan="2">' . $date . "</th>";
@@ -196,17 +196,22 @@ class Dashboard{
         $statsHeader = $this->tableHeader['stats'];
         $body = "";
         // first summary row
-        $body .= "<tr>";
+        /*$body .= "<tr>";
         $body .= '<th colspan="2">Celkem titulů</th>';
         $body .= "<td>" . count($datas) . "</td>";
-        $body .= "</tr>";
+        $body .= "</tr>";*/
         // view for loans
         foreach($datas as $adm_rec => $data){
             $row = "<tr>";
             $row .= "<th>" . $adm_rec . "</th>";
             
             foreach($informationHeader as $column => $default){
-                $row .= '<td class="information">' . $data[$column] . "</td>";
+                if($column == 'MIN' || $column == 'MAX'){
+                    $row .= '<td class="information">' . $data[$column] . " %</td>";
+                }
+                else{
+                    $row .= '<td class="information">' . $data[$column] . "</td>";
+                }
             }
             foreach($statsHeader as $date => $columns){
                 if(isset($data['STATS'][$date])){
@@ -239,6 +244,8 @@ class Dashboard{
             $tableHeader['information']['TITLE'] = '';
             $tableHeader['information']['CALLNO'] = '';
             $tableHeader['information']['UNITS'] = 0;
+            $tableHeader['information']['MIN'] = 0;
+            $tableHeader['information']['MAX'] = 0;
             for($month; ($month->diff($end)->m + ($month->diff($end)->y*12)) > 0; $month->modify('first day of next month')){
                 $tableHeader['stats'][$month->format('Y-m')]['AVRG'] = 0;
                 $tableHeader['stats'][$month->format('Y-m')]['STD'] = 0;
@@ -298,7 +305,7 @@ class Dashboard{
            'status',
            'AVRG_UNITS' => Medoo::raw('AVG(unit_count)'),
            'AVRG_LOANED' => Medoo::raw('AVG(loans_count/unit_count) * 100'),
-           'STD_DEV' => Medoo::raw('STDDEV_SAMP(loans_count/unit_count) * 2 * 100')
+           'STD_DEV' => Medoo::raw('STDDEV_POP(loans_count/unit_count) * 2 * 100')
         ], $where);
 
         // transform the select rows into a datatable
@@ -310,6 +317,8 @@ class Dashboard{
                 $data[$adm_rec]['TITLE'] = $row['TITLE'];
                 $data[$adm_rec]['CALLNO'] = $row['CALLNO'];
                 $data[$adm_rec]['UNITS'] = (int)$row['AVRG_UNITS'];
+                $data[$adm_rec]['MIN'] = 0;
+                $data[$adm_rec]['MAX'] = 0;
                 $data[$adm_rec]['STATS'] = $this->tableHeader['stats'];
             }
             $data[$adm_rec]['STATS'][$row['DATE']]['AVRG'] = round($row['AVRG_LOANED']);
@@ -329,6 +338,22 @@ class Dashboard{
                     $data[$adm_rec]['STATS'] = $this->tableHeader['stats'];
                 }
             }
+        }
+
+        // Set up min and max value for the watched period
+        foreach($data as $adm_rec => $title){
+            $min = 100;
+            $max = 0;
+            foreach($title['STATS'] as $timepoint => $stats){
+                if($stats['AVRG'] < $min){
+                    $min = $stats['AVRG'];
+                }
+                if($stats['AVRG'] > $max){
+                    $max = $stats['AVRG'];
+                }
+            }
+            $data[$adm_rec]['MIN'] = $min;
+            $data[$adm_rec]['MAX'] = $max;
         }
 
         echo "<pre>";

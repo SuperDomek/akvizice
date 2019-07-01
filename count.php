@@ -13,7 +13,7 @@ class Count{
 
     function Count(){
         // Loading configuration
-        $config = new Config('config.ini');
+        $config = new Config('FEosu261BP/config.ini');
         $format_conf = $config->get('format');
         $this->dateFormat = $format_conf['dateformat'];
     }

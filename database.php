@@ -17,7 +17,7 @@ class Database {
     */
     function Database(){
         // Loading configuration
-        $config = new Config('config.ini');
+        $config = new Config('FEosu261BP/config.ini');
         $db_conf = $config->get('mysql');
         $this->connection = new Medoo($db_conf);
         $this->connection->query("SET CHARACTER SET utf8");

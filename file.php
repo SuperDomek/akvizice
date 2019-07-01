@@ -30,7 +30,7 @@ class File{
     */
     function File(){
         // Loading configuration
-        $config = new Config('config.ini');
+        $config = new Config('FEosu261BP/config.ini');
         $file_conf = $config->get('files');
 
         // check if we got upload directory in config
