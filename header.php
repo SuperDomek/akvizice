@@ -5,6 +5,9 @@ require_once dirname(__DIR__) . '/akvizice/vendor/autoload.php'; // It must be c
 define('STATUS_ABSENCNE', 4);
 define('STATUS_SKRIPTA', 5);
 define('STATUS_NOVINKA', 6);
+
+define('LEVEL_ADMIN', 0x1);
+define('LEVEL_USER', 0x1F);
 ?>
 
 <html lang="cs">

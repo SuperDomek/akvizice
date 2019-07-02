@@ -6,13 +6,7 @@ body{
     width: 90%;
     margin: auto;
 }
-/*
-    ABANDONED FOR PERFORMANCE ISSUES
-    Fixed header and first column by Matthew Schlachter,
-    further modified
-    https://stackoverflow.com/a/50516259/7364458
 
-*/
 #data #container{
     max-width: 100%;
     max-height: 800px;
@@ -42,4 +36,40 @@ body{
 
 .sortable {
     cursor: pointer;
+}
+
+#login {
+    
+    
+    position: absolute;
+    top: 40%;
+    left: 40%;
+}
+#login form {
+    padding: 16px;
+    border: 3px solid #f1f1f1;
+    display: inline-block;
+}
+
+#login input{
+    display: block;
+    margin-bottom: 0.5em;
+    
+}
+
+#login label{
+    float: left;
+    margin-right: 0.5em;
+}
+
+#login .forgot{
+    clear: both;
+}
+
+.error{
+    border: 2px solid red;
+}
+
+.green{
+    border: 2px solid green !important;
 }
