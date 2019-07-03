@@ -1,14 +1,16 @@
-<!doctype html>
-
 <?php
+session_start();
 require_once dirname(__DIR__) . '/akvizice/vendor/autoload.php'; // It must be called first
 define('STATUS_ABSENCNE', 4);
 define('STATUS_SKRIPTA', 5);
 define('STATUS_NOVINKA', 6);
 
 define('LEVEL_ADMIN', 0x1);
-define('LEVEL_USER', 0x1F);
+define('LEVEL_USER', 0x10);
+
+require_once 'user.php';
 ?>
+<!doctype html>
 
 <html lang="cs">
 <head>
@@ -42,3 +44,18 @@ define('LEVEL_USER', 0x1F);
   </script>
 </head>
 <body>
+
+<?php
+  if (isset($_SESSION['error'])) {
+    echo '<div id="error_msg" class="error"><p>';
+    echo $_SESSION['error'] . PHP_EOL;
+    unset($_SESSION['error']);
+    echo '</p></div>';
+  }
+
+  
+  if(isset($_SESSION['user_login'])){
+    echo '<a href="logout.php" class="menu"><button>Odhlásit</button></a>';
+  }
+  echo '<a href="index.php" class="menu"><button>Domů</button></a>';
+?>

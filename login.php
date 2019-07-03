@@ -3,7 +3,7 @@
 
 
 <div id="login">
-    <form action="user.php">
+    <form action="user.php" method="POST">
         <input type="hidden" name="type" value="login">
 
         <label for="name"><b>Login</b></label>

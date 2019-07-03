@@ -1,4 +1,7 @@
-<?php require_once 'header.php'?>
+<?php
+require_once 'header.php';
+$user->checkSession();
+?>
 
 <?php
 require_once 'application.php';
@@ -8,7 +11,8 @@ $counts = $application->getCounts();
 ?>
 
 
-
+<?php
+if($user->validate(LEVEL_ADMIN)){ ?>
 <div id="forms-section">
     <div id="titles">
         <h1>Tituly</h1>
@@ -62,6 +66,7 @@ $counts = $application->getCounts();
         </form>
     </div>
 <hr/>
+<?php } ?>
     <div id="dashboard">
         <h1>Zobrazení dat</h1>
         <p>

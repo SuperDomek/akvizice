@@ -73,3 +73,10 @@ body{
 .green{
     border: 2px solid green !important;
 }
+#error_msg{
+    font-weight: bold;
+}
+.menu{
+    float:right;
+    margin: 0.5em;
+}

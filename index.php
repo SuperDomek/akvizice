@@ -1,7 +1,9 @@
-<?php require_once 'header.php'?>
+<?php require_once 'header.php';
+$user->checkSession();
+?>
 
 <?php
-    header('Location: login.php');
+    header('Location: home.php');
 ?>
 
 </body>
