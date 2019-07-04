@@ -1,4 +1,9 @@
-<?php require_once 'header.php';?>
+<?php require_once 'header.php';
+if($user->validate(LEVEL_ADMIN) === false){
+    $_SESSION['error'] = "Access denied.";
+    header("Location: home.php");
+}
+?>
 
 <?php
 

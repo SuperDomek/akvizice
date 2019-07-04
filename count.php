@@ -1,5 +1,10 @@
 <?php require_once 'header.php';
-//$user->checkSession();?>
+//$user->checkSession();
+if($user->validate(LEVEL_ADMIN) === false){
+    $_SESSION['error'] = "Access denied.";
+    header("Location: home.php");
+}
+?>
 
 <?php
 
@@ -75,18 +80,18 @@ class Count{
 
         //create array with active titles
         
-        echo("Start: " . $start_date . PHP_EOL);
-        echo("End: " . $end_date . PHP_EOL);
+        //echo("Start: " . $start_date . PHP_EOL);
+        //echo("End: " . $end_date . PHP_EOL);
 
         // cycle through date array and count the usage
         foreach($dates_arr as $date){
-            echo "<pre>";
+            //echo "<pre>";
             $titles = $this->getAllActiveTitles($date);
             $allLoans = $this->getTitlesLoans($date);
             
-            echo "Date: " . $date . PHP_EOL;
-            echo("Active titles count: " . count($titles) . PHP_EOL);
-            echo("Loaned titles count: " . count($allLoans) . PHP_EOL);
+            //echo "Date: " . $date . PHP_EOL;
+            //echo("Active titles count: " . count($titles) . PHP_EOL);
+            //echo("Loaned titles count: " . count($allLoans) . PHP_EOL);
             //print_r($titles);
             //print_r($allLoans);
             
@@ -122,7 +127,7 @@ class Count{
                 
             }
             //echo "Jednotky s mrtvými výpůjčkami: " . $counter . PHP_EOL;
-            echo "</pre>";
+            //echo "</pre>";
         }
             
     }
