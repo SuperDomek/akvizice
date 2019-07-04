@@ -1,5 +1,5 @@
 <?php require_once 'header.php';
-$user->checkSession();?>
+//$user->checkSession();?>
 
 <?php
 

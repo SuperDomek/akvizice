@@ -1,4 +1,4 @@
-<?php require_once 'header.php'?>
+<?php require_once 'header.php';?>
 
 <?php
 
@@ -21,6 +21,7 @@ class User{
             $pass = $_POST['pass'];
             $level = LEVEL_USER;
             $type = $_POST['type'];
+            echo "here";
             
             // verify the type with coming request url
             if(!isset($_SERVER['HTTP_REFERER'])
@@ -137,10 +138,10 @@ class User{
                 $this->user = $user_db['login'];
             }
         }
-        else{
+        // do not redirect from login or register page
+        elseif(strpos($_SERVER['PHP_SELF'], "login") === FALSE && strpos($_SERVER['PHP_SELF'], "register") === FALSE){
             $_SESSION['error'] = "Error: User not logged in.";
             header("Location: login.php");
-            exit();
         }
     }
 

@@ -4,3 +4,7 @@
 /uploads*
 /*.xlsx
 /*.sql
+/.editorconfig
+/.ftpquota
+/.htaccess*
+/error_log

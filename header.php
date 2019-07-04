@@ -1,6 +1,9 @@
 <?php
 session_start();
-require_once $_SERVER['DOCUMENT_ROOT'] . '/akvizice/vendor/autoload.php'; // It must be called first
+if($_SERVER['SERVER_NAME'] == 'localhost')
+  require_once $_SERVER['DOCUMENT_ROOT'] . '/akvizice/vendor/autoload.php'; // It must be called first
+else
+  require_once $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php'; // It must be called first
 define('STATUS_ABSENCNE', 4);
 define('STATUS_SKRIPTA', 5);
 define('STATUS_NOVINKA', 6);
@@ -9,6 +12,12 @@ define('LEVEL_ADMIN', 0x1);
 define('LEVEL_USER', 0x10);
 
 require_once 'user.php';
+if(isset($user)){
+  $user->checkSession();
+}
+/*echo "<pre>";
+print_r($_SERVER);
+echo "</pre>";*/
 ?>
 <!doctype html>
 
