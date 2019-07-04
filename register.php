@@ -1,4 +1,4 @@
-<?php require_once 'header.php'?>
+<?php require_once 'header.php';?>
 
 <script type="text/javascript">
 var check = function() {

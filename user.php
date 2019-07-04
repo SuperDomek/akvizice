@@ -23,9 +23,8 @@ class User{
             $type = $_POST['type'];
             
             // verify the type with coming request url
-            
             if(!isset($_SERVER['HTTP_REFERER'])
-            || !preg_match("/^http?:\/\/" . $_SERVER['SERVER_NAME'] . "\/.*" . $type . ".php/i", $source)){
+            || !preg_match("/^http[s]?:\/\/" . $_SERVER['SERVER_NAME'] . "\/.*" . $type . ".php/i", $source)){
                 error_log("Error: The form type does not match the requested action.");
                 $_SESSION['error'] = "Error: The form type does not match the requested action.";
                 header("Location: " . $source);

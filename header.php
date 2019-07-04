@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once dirname(__DIR__) . '/akvizice/vendor/autoload.php'; // It must be called first
+require_once $_SERVER['DOCUMENT_ROOT'] . '/akvizice/vendor/autoload.php'; // It must be called first
 define('STATUS_ABSENCNE', 4);
 define('STATUS_SKRIPTA', 5);
 define('STATUS_NOVINKA', 6);
