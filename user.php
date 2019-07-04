@@ -21,7 +21,6 @@ class User{
             $pass = $_POST['pass'];
             $level = LEVEL_USER;
             $type = $_POST['type'];
-            echo "here";
             
             // verify the type with coming request url
             if(!isset($_SERVER['HTTP_REFERER'])
