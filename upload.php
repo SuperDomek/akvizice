@@ -10,12 +10,11 @@ $uploaded_file = new File();
 
 $uploaded_file->validateFile($_POST['file']);
 
-echo "<pre>";
+/*echo "<pre>";
 print_r($uploaded_file->getFileName());
-print_r($uploaded_file->getFilePath());
+print_r($uploaded_file->getFilePath());*/
 
 $data = new Data();
 $data->processFile($uploaded_file);
-echo "<pre>";
 
 ?>
