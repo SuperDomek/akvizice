@@ -13,4 +13,13 @@ uploaddir = "./uploads"
 
 [format]
 
-dateformat = "Y-m-d"
+date_format = "Y-m-d"
+
+[usage]
+
+# the formatting must be the same as in date_format
+# the date from which the usage statistics will be counted; cannot be empty
+start_date = "2010-01-01"
+# the end date until which the usage statistics will be counted
+# if empty current date will be used
+end_date = ""

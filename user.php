@@ -81,12 +81,12 @@ class User{
             $_SESSION['error'] = "Error: User " . $user . "doesn't exist.";
         }
 
-        echo "<pre>";
+        /*echo "<pre>";
         print_r($user);
         echo "Logging in user: " . $login . PHP_EOL;
         echo "Password: " . $password . PHP_EOL;
         echo "Logged in user: " . $_SESSION['user_login'] . PHP_EOL;
-        echo "</pre>";
+        echo "</pre>";*/
     }
 
     function register($login, $password, $level){

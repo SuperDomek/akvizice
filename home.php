@@ -58,19 +58,16 @@ if($user->validate(LEVEL_ADMIN)){ ?>
     <div id="usage">
         <h1>Výpočet využívanosti</h1>
         <p>Počet záznamů: <?php echo $counts['usage'];?></p>
-        <form action="count.php" method="GET">
-            <!--<select name="count">
-                <option value="units">Units</option>
-            </select>-->
-            <input type="submit" value="Přepočítat"/>
-        </form>
+        <p>
+            <a href="count.php"><button>Přejít</button></a>
+        </p>
     </div>
 <hr/>
 <?php } ?>
     <div id="dashboard">
         <h1>Zobrazení dat</h1>
         <p>
-            <a href="statistics.php"><button>Přejít</button>
+            <a href="statistics.php"><button>Přejít</button></a>
         </p>
     </div>
 </div>

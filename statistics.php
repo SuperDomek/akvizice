@@ -32,7 +32,7 @@ class Dashboard{
         // Loading configuration
         $config = new Config('FEosu261BP/config.ini');
         $format_conf = $config->get('format');
-        $this->dateFormat = $format_conf['dateformat'];
+        $this->dateFormat = $format_conf['date_format'];
         if(isset($_GET))
             $this->loadParameters();
         $this->loadOverview();

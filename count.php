@@ -15,13 +15,61 @@ require_once 'data.php';
 
 class Count{
 
-    private $dateFormat = "Y-m-d";
+    private $dateFormat = "";
+    private $startDate = "";
+    private $endDate = "";
+    public $counter = array();
+
 
     function Count(){
         // Loading configuration
         $config = new Config('FEosu261BP/config.ini');
         $format_conf = $config->get('format');
-        $this->dateFormat = $format_conf['dateformat'];
+        // Get format from config
+        if(!empty($format_conf['date_format'])){
+            $this->dateFormat = $format_conf['date_format'];
+        }
+        else{
+            error_log("Error: The config date_format is empty.");
+            die("Error: The config date_format is empty.");
+        }
+        $usage_conf = $config->get('usage');
+
+        // get default dates from config
+        if(!empty($usage_conf['start_date'])){
+            $start_date = $usage_conf['start_date'];
+            if(!$this->validateDate($start_date)){// validate date
+                error_log("The config start date " . $start_date . " is invalid.");
+                die("The config start date " . $start_date . " is invalid.");
+            }
+            else{ // save the date
+                $this->startDate = $start_date;
+            }
+        }
+        else{
+            error_log("Error: Empty start date in config.");
+            die("Error: Empty start date in config.");
+        }
+
+        if(!empty($usage_conf['end_date'])){
+            $end_date = $usage_conf['end_date'];
+            if(!$this->validateDate($end_date)){
+                error_log("The date " . $end_date . " is invalid.");
+                die("The date " . $end_date . " is invalid.");
+            }
+            else{
+                $this->endDate = $end_date;
+            } 
+        }
+        else{
+            $this->endDate = date($this->dateFormat);
+        }
+
+        // if the form is submitted count the usage
+        if(!empty($_GET)){
+            $this->CountUsageAll(null, null);
+        }
+
     }
 
     /*
@@ -38,8 +86,8 @@ class Count{
             die("The start date " . $start . " is invalid.");
         };
         if(!$this->validateDate($end)){
-            error_log("The start date " . $end . " is invalid.");
-            die("The start date " . $end . " is invalid.");
+            error_log("The date " . $end . " is invalid.");
+            die("The date " . $end . " is invalid.");
         };
         // generate the date array
         $day = new DateInterval('P1D');
@@ -63,26 +111,46 @@ class Count{
     }
 
     /*
-    * Counts usage for all active titles for dates given; purges the corresponding dates first
+    * Counts usage for all active titles for dates given; If nothing given uses config values
+    * Purges the corresponding dates first
     * The only place that stores statuses is units table; so the counts for statuses
-    * is based on the status that the unit currently has and not on the status of the unit at the time of the loan
-    * $dates array year for which count the usage
+    * are based on the status that the unit currently has and not on the status of the unit at the time of the loan
+    * $start_date string start day for which count the usage
+    * $end_date string end day for which count the usage
     */
-    function CountUsageAll($start_date, $end_date){
+    function CountUsageAll($start_date = null, $end_date = null){
         $db = Database::getConnection();
-        
+        // if parameters are empty then use config values
+        if(empty($start_date)){
+            $start_date = $this->startDate;
+        }
+        else{// if given dates then check their format
+            if(!$this->validateDate($start_date)){
+                error_log("The date " . $start_date . " is invalid.");
+                die("The date " . $start_date . " is invalid.");
+            };
+        }
+        if(empty($end_date)){
+            $end_date = $this->endDate;
+        }
+        else{
+            if(!$this->validateDate($end_date)){
+                error_log("The date " . $end_date . " is invalid.");
+                die("The date " . $end_date . " is invalid.");
+            };
+        }
+
         $dates_arr = $this->generateDateArray($start_date, $end_date);
 
         // purge corresponding dates usage from db
         $db->delete('usage', [
             'date[<>]' => [$start_date, $end_date]    
         ]);
-
-        //create array with active titles
-        
-        //echo("Start: " . $start_date . PHP_EOL);
-        //echo("End: " . $end_date . PHP_EOL);
-
+        $counter = array(
+            'rows' => 0,
+            'titles' => 0,
+            'dates' => 0
+        );
         // cycle through date array and count the usage
         foreach($dates_arr as $date){
             //echo "<pre>";
@@ -110,25 +178,28 @@ class Count{
                 // use the max number of units as loans => maximum usage
                 
                 //echo("Title " . $adm_rec . ": " . $loans . " / " . $units . PHP_EOL);
-                foreach($loans as $status => $loans_status){
-                    $units_status = $units[$status];
-                    if($loans_status > $units_status){
-                        $loans_status = $units_status;
+                foreach($loans as $status => $loans_count){
+                    $units_count = $units[$status];
+                    if($loans_count > $units_count){
+                        $loans_count = $units_count;
                     }
-                    //echo("Title " . $adm_rec . " status " . $status . ": " . $loans_status . " / " . $units_status . PHP_EOL);
+                    //echo("Title " . $adm_rec . " status " . $status . ": " . $loans_count . " / " . $units_count . PHP_EOL);
                     $db->insert('usage', [
                     'date' => $date,
-                    'ADM_REC' => $adm_rec,
+                    'ADM_REC' => (int) $adm_rec,
                     'status' => $status,
-                    'loans_count' => $loans_status,
-                    'unit_count' => $units_status
+                    'loans_count' => $loans_count,
+                    'unit_count' => $units_count
                     ]);
+                    $counter['rows']++;
                 }
-                
+                $counter['titles']++;
             }
+            $counter['dates']++;
             //echo "Jednotky s mrtvými výpůjčkami: " . $counter . PHP_EOL;
             //echo "</pre>";
         }
+        $this->counter = $counter;
             
     }
 
@@ -219,11 +290,10 @@ class Count{
     }
 }
 
-$data = new Data();
+//$data = new Data();
 $count = new Count();
-$db = Database::getConnection();
-$start = date("Y-m-d", mktime(0, 0, 0, 1, 1, 2018));
-$end = date("Y-m-d", mktime(0, 0, 12, 12, 31, 2018));
+//$start = date("Y-m-d", mktime(0, 0, 0, 1, 1, 2018));
+//$end = date("Y-m-d", mktime(0, 0, 12, 12, 31, 2018));
 
 
 /*echo $start. PHP_EOL;
@@ -231,5 +301,25 @@ echo count($test) . PHP_EOL;
 var_dump($test);
 var_dump($db->error());*/
 
-$count->CountUsageAll($start, $end);
+
 ?>
+
+<div id="usage">
+    <h1>Výpočet využívanosti</h1>
+    <?php
+        if(!empty($count->counter)){
+            echo "<p>Počet přidaných řádků: ". $count->counter['rows'] . "</p>" . PHP_EOL;
+            echo "<p>Počet přidaných titulů: ". $count->counter['titles'] . "</p>" . PHP_EOL;
+            echo "<p>Počet přidaných dnů: ". $count->counter['dates'] . "</p>" . PHP_EOL;
+        }
+    ?>
+    <form action="count.php" method="GET">
+        <!--<select name="count">
+            <option value="units">Units</option>
+        </select>-->
+        <input type="submit" name="submit" value="Přepočítat"/>
+    </form>
+</div>
+
+</body>
+</html>
