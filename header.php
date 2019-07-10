@@ -23,7 +23,8 @@ echo "</pre>";*/
 
 <html lang="cs">
 <head>
-  <meta charset="utf-8">
+<meta http-equiv="content-type"
+  content="text/html; charset=utf-8">
 
   <title>Simple collection use counter</title>
   <meta name="description" content="Collection usage counter">

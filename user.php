@@ -15,7 +15,7 @@ class User{
     function User(){
         $db = Database::getConnection();
 
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){ //processing form
+        if($_SERVER['REQUEST_METHOD'] == 'POST' && empty($_FILES)){ //processing form
             $source = $_SERVER['HTTP_REFERER'];
             $login = $_POST['name'];
             $pass = $_POST['pass'];

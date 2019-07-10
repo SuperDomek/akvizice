@@ -33,8 +33,7 @@ class Data {
     */
     function processFile($file){
         $file_columns = array();
-        echo "Probíhá aktualizace databáze: " . $file->getDataType();
-
+        //echo "Probíhá aktualizace databáze: " . $file->getDataType();
         switch ($file->getFileType()){
             case 'xlsx':
                 $reader = ReaderFactory::create(Type::XLSX);
@@ -59,14 +58,14 @@ class Data {
             foreach ($sheet->getRowIterator() as $index => $row) {
                 if($index == 1){ // first row = headers
                     $file_columns = $this->processHeader($row, $file->getDataType());
-                    echo "<br/>";
+                    /*echo "<br/>";
                     print_r("Original header");
                     echo "<br/>";
                     print_r($row);
                     echo "<br/>";
                     print_r("Processed header". ": " . $file->getDataType());
                     echo "<br/>";
-                    print_r($file_columns);
+                    print_r($file_columns);*/
                 }
                 else{
                     $counter = $this->processRow($row, $file->getDataType(), $file_columns);
