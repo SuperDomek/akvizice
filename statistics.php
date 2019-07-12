@@ -174,13 +174,15 @@ class Dashboard{
             $header .= '<th rowspan="2" class="sortable">' . $column . "</th>";
         }
         foreach($headerArr['stats'] as $date => $columns){
-            $header .= '<th colspan="2">' . $date . "</th>";
+            $header .= '<th>' . $date . "</th>";
         }
         $header .= "</tr>";
         // Second row
         $header .= "<tr>";
         foreach($headerArr['stats'] as $date => $columns){
             foreach($columns as $column => $default){
+                if($column == 'STD')
+                    continue;
                 $header .= "<th>" . $column . "</th>";
             }
         }
@@ -216,12 +218,16 @@ class Dashboard{
             foreach($statsHeader as $date => $columns){
                 if(isset($data['STATS'][$date])){
                     foreach($columns as $column => $default){
-                        $row .= '<td class="stats">' . $data['STATS'][$date][$column] . " %</td>";
+                        if(($data['STATS'][$date]['STD'] * 2 > $data['STATS'][$date]['AVRG'] * 0.4) && $column == 'AVRG')
+                            $row .= '<td class="stats std_high" title="STD: ' . $data['STATS'][$date]['STD'] . '">' . $data['STATS'][$date][$column] . " %</td>";
+                        else if($column == 'AVRG'){
+                            $row .= '<td class="stats">' . $data['STATS'][$date][$column] . " %</td>";
+                        }
                     }
                 }
                 else{
                     $row .= '<td class="stats">-</td>';
-                    $row .= '<td class="stats">-</td>';
+                    //$row .= '<td class="stats">-</td>';
                 }
             }
             $row .= "</tr>";
@@ -305,7 +311,7 @@ class Dashboard{
            'status',
            'AVRG_UNITS' => Medoo::raw('AVG(unit_count)'),
            'AVRG_LOANED' => Medoo::raw('AVG(loans_count/unit_count) * 100'),
-           'STD_DEV' => Medoo::raw('STDDEV_POP(loans_count/unit_count) * 2 * 100')
+           'STD_DEV' => Medoo::raw('STDDEV_POP(loans_count/unit_count) * 100')
         ], $where);
 
         // transform the select rows into a datatable

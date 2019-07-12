@@ -24,13 +24,20 @@ body{
   }
 
 #data tbody th {
-    background: #FFF;
     border-right: 1px solid #CCC;
 }
 #data td, th {
     padding: 0.25em;
 }
-.stats:nth-child(even){
+
+#data tbody tr:nth-child(even) {
+    background: lightgray;
+}
+/*.stats:nth-child(even){
+    border-right: 1px solid #CCC;
+}*/
+
+.stats{
     border-right: 1px solid #CCC;
 }
 
@@ -39,8 +46,6 @@ body{
 }
 
 #login {
-    
-    
     position: absolute;
     top: 40%;
     left: 40%;
@@ -79,4 +84,12 @@ body{
 .menu{
     float:right;
     margin: 0.5em;
+}
+/*.std_high{
+    background-color: yellow;
+}*/
+.std_high::after{
+    content: " !";
+    color: red;
+    font-weight: bold;
 }
