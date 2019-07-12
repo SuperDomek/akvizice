@@ -9,6 +9,7 @@ require_once 'data.php';
 class Dashboard{
 
     public $dateFormat = "Y-m-d";
+    private static $exportdir;
     public $parameters = array(
         'start' => '2018-01-01',
         'end' => '2018-12-31',
@@ -32,11 +33,36 @@ class Dashboard{
         // Loading configuration
         $config = new Config('FEosu261BP/config.ini');
         $format_conf = $config->get('format');
+        $file_conf = $config->get('files');
+
+        // check if we got export directory in config
+        if ($file_conf['exportdir']){
+            if (!self::$exportdir)
+                self::$exportdir = $file_conf['exportdir'];
+        }
+        else{
+            error_log("Error: The upload directory not specified");
+            die();
+        }
+
+        // create the upload folder if it doesn't exist
+        if (!file_exists($file_conf['exportdir'])) {
+            mkdir($file_conf['exportdir'], 0755, true);
+        }
+
         $this->dateFormat = $format_conf['date_format'];
-        if(isset($_GET))
-            $this->loadParameters();
-        $this->loadOverview();
+
         $this->getTimeDataHeader();
+
+        if(!empty($_GET)){
+            $this->loadParameters();
+            if(isset($_GET['export'])){
+                $this->export($_GET['export']);
+            }
+        }
+
+        $this->loadOverview();
+        
     }
 
     function loadParameters(){
@@ -263,7 +289,6 @@ class Dashboard{
         print_r($tableHeader);
         echo "</pre>";*/
         $this->tableHeader = $tableHeader;
-        
 
         return;
     }
@@ -362,14 +387,20 @@ class Dashboard{
             $data[$adm_rec]['MAX'] = $max;
         }
 
-        echo "<pre>";
+        //echo "<pre>";
         //print_r($select);
         //print_r($this->tableHeader);
         //print_r($data);
-        echo "</pre>";
+        //echo "</pre>";
         return $data;
     }
 
+    function export($type){
+        if($type == "Excel(XLSX)"){
+            $datas = $this->getData();
+            $_SESSION['error'] = "Export uložen do složky s exporty.";
+        }
+    }
 }
 
 $dashboard = new Dashboard();
@@ -390,9 +421,9 @@ $dashboard = new Dashboard();
 </head>
 
 <body>
+<form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" method="GET">
 <div id="forms-section">
-    <h1>Nastavení</h1>
-    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" method="GET">
+    <h1>Nastavení</h1>    
         <label for="date_start">Vyberte časový úsek k porovnání:</label>
             <input type="date" name="date_start" value="<?php echo $dashboard->parameters['start'];?>"/>
             <input type="date" name="date_end" value="<?php echo $dashboard->parameters['end'];?>"/>
@@ -416,7 +447,6 @@ $dashboard = new Dashboard();
             </select>
         <br/>
         <input type="submit" value="Odeslat"/>
-    </form>
 </div>
 <hr/>
 <div id="overview">
@@ -428,6 +458,7 @@ $dashboard = new Dashboard();
     </div>
 <hr/>
 <div id="data">
+    <input type="submit" name="export" class="menu" value="Excel(XLSX)"/>
     <h1>Data</h1>
     <div id="container">
         <table>
@@ -440,5 +471,6 @@ $dashboard = new Dashboard();
         </table>
     </div>
 </div>
+</form>
 </body>
 </html>

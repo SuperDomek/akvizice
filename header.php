@@ -63,7 +63,6 @@ echo "</pre>";*/
     echo '</p></div>';
   }
 
-  
   if(isset($_SESSION['user_login'])){
     echo '<a href="logout.php" class="menu"><button>Odhlásit</button></a>';
   }
