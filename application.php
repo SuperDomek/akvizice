@@ -85,7 +85,6 @@ class Application {
                 if(strpos($entry, 'xlsx') !== false ||
                 strpos($entry, 'csv') !== false)
                 $exports[$entry] = explode("_", explode(".", $entry)[0]);
-                print_r($exports);
             }
             
             // map file name parameters to statistics parameters
