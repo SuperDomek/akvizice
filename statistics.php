@@ -4,12 +4,15 @@
 
 use PHLAK\Config\Config;
 use Medoo\Medoo;
+use Box\Spout\Common\Type;
+use Box\Spout\Writer\WriterFactory;
+use Box\Spout\Common\Entity\Row;
 require_once 'data.php';
 
 class Dashboard{
 
     public $dateFormat = "Y-m-d";
-    private static $exportdir;
+    public $exportdir = "";
     public $parameters = array(
         'start' => '2018-01-01',
         'end' => '2018-12-31',
@@ -37,8 +40,7 @@ class Dashboard{
 
         // check if we got export directory in config
         if ($file_conf['exportdir']){
-            if (!self::$exportdir)
-                self::$exportdir = $file_conf['exportdir'];
+            $this->exportdir = $file_conf['exportdir'];
         }
         else{
             error_log("Error: The upload directory not specified");
@@ -57,7 +59,12 @@ class Dashboard{
         if(!empty($_GET)){
             $this->loadParameters();
             if(isset($_GET['export'])){
+                $source = $_SERVER['HTTP_REFERER'];
+                // filter the export from request from url so we don't loop
+                $redirect = explode("&export", $source)[0];
                 $this->export($_GET['export']);
+                header("Location: " . $redirect);
+                exit();
             }
         }
 
@@ -187,79 +194,136 @@ class Dashboard{
     }
 
      /*
-    * Renders HTML code for data table header
+    * Renders data table header according to type
+    * $type string Type of rendering used
+    * $writer reference_object Writer object used for exports
     * $return string The html string for header
     */
-    function renderTableHeader() {
-        // First row
-        $header = "<tr>";
-        $headerArr = $this->tableHeader;
-        //$size = serialize($data);
-        //echo strlen($size) . " bytes" . PHP_EOL;
-        foreach($headerArr['information'] as $column => $default){
-            $header .= '<th rowspan="2" class="sortable">' . $column . "</th>";
-        }
-        foreach($headerArr['stats'] as $date => $columns){
-            $header .= '<th>' . $date . "</th>";
-        }
-        $header .= "</tr>";
-        // Second row
-        $header .= "<tr>";
-        foreach($headerArr['stats'] as $date => $columns){
-            foreach($columns as $column => $default){
-                if($column == 'STD')
-                    continue;
-                $header .= "<th>" . $column . "</th>";
+    function renderTableHeader($type, &$writer = null) {
+        if($type == "HTML"){
+            // First row
+            $header = "<tr>";
+            $headerArr = $this->tableHeader;
+            //$size = serialize($data);
+            //echo strlen($size) . " bytes" . PHP_EOL;
+            foreach($headerArr['information'] as $column => $default){
+                $header .= '<th rowspan="2" class="sortable">' . $column . "</th>";
             }
+            foreach($headerArr['stats'] as $date => $columns){
+                $header .= '<th>' . $date . "</th>";
+            }
+            $header .= "</tr>";
+            // Second row
+            $header .= "<tr>";
+            foreach($headerArr['stats'] as $date => $columns){
+                foreach($columns as $column => $default){
+                    if($column == 'STD')
+                        continue;
+                    $header .= "<th>" . $column . "</th>";
+                }
+            }
+            $header .= "</tr>";
+            return $header;
         }
-        $header .= "</tr>";
-        return $header;
+        else if($type == "Excel(XLSX)"){
+            $firstRow = array();
+            $secondRow = array();
+            $rows = array();
+            // First row
+            $headerArr = $this->tableHeader;
+            foreach($headerArr['information'] as $column => $default){
+                // empty cell because Spout doesn't know merging
+                $firstRow[] = "";
+            }
+            foreach($headerArr['stats'] as $date => $columns){
+                $firstRow[] = $date;
+                $firstRow[] = "";
+            }
+            $rows[] = $firstRow;
+            // Second row
+            foreach($headerArr['information'] as $column => $default){
+                $secondRow[] = $column;
+            }
+            foreach($headerArr['stats'] as $date => $columns){
+                foreach($columns as $column => $default){
+                    $secondRow[] = $column;
+                }
+            }
+            $rows[] = $secondRow;
+            $writer->addRows($rows);
+            /*echo "<pre>";
+            print_r($writer);
+            echo "</pre>";*/
+        }
     }
 
-    function renderTableBody(){
-
+    function renderTableBody($type, &$writer = null){
         $datas = $this->getData();
         $informationHeader = $this->tableHeader['information'];
         unset($informationHeader[array_search('ADM_REC', $informationHeader)]);
         $statsHeader = $this->tableHeader['stats'];
-        $body = "";
-        // first summary row
-        /*$body .= "<tr>";
-        $body .= '<th colspan="2">Celkem titulů</th>';
-        $body .= "<td>" . count($datas) . "</td>";
-        $body .= "</tr>";*/
-        // view for loans
-        foreach($datas as $adm_rec => $data){
-            $row = "<tr>";
-            $row .= "<th>" . $adm_rec . "</th>";
-            
-            foreach($informationHeader as $column => $default){
-                if($column == 'MIN' || $column == 'MAX'){
-                    $row .= '<td class="information">' . $data[$column] . " %</td>";
-                }
-                else{
-                    $row .= '<td class="information">' . $data[$column] . "</td>";
-                }
-            }
-            foreach($statsHeader as $date => $columns){
-                if(isset($data['STATS'][$date])){
-                    foreach($columns as $column => $default){
-                        if(($data['STATS'][$date]['STD'] * 2 > $data['STATS'][$date]['AVRG'] * 0.4) && $column == 'AVRG')
-                            $row .= '<td class="stats std_high" title="STD: ' . $data['STATS'][$date]['STD'] . '">' . $data['STATS'][$date][$column] . " %</td>";
-                        else if($column == 'AVRG'){
-                            $row .= '<td class="stats">' . $data['STATS'][$date][$column] . " %</td>";
-                        }
+        if($type == "HTML"){
+            $body = "";
+            // first summary row
+            /*$body .= "<tr>";
+            $body .= '<th colspan="2">Celkem titulů</th>';
+            $body .= "<td>" . count($datas) . "</td>";
+            $body .= "</tr>";*/
+            // view for loans
+            foreach($datas as $adm_rec => $data){
+                $row = "<tr>";
+                $row .= "<th>" . $adm_rec . "</th>";
+                
+                foreach($informationHeader as $column => $default){
+                    if($column == 'MIN' || $column == 'MAX'){
+                        $row .= '<td class="information">' . $data[$column] . " %</td>";
+                    }
+                    else{
+                        $row .= '<td class="information">' . $data[$column] . "</td>";
                     }
                 }
-                else{
-                    $row .= '<td class="stats">-</td>';
-                    //$row .= '<td class="stats">-</td>';
+                foreach($statsHeader as $date => $columns){
+                    if(isset($data['STATS'][$date])){
+                        foreach($columns as $column => $default){
+                            if(($data['STATS'][$date]['STD'] * 2 > $data['STATS'][$date]['AVRG'] * 0.4) && $column == 'AVRG')
+                                $row .= '<td class="stats std_high" title="STD: ' . $data['STATS'][$date]['STD'] . '">' . $data['STATS'][$date][$column] . " %</td>";
+                            else if($column == 'AVRG'){
+                                $row .= '<td class="stats">' . $data['STATS'][$date][$column] . " %</td>";
+                            }
+                        }
+                    }
+                    else{
+                        $row .= '<td class="stats">-</td>';
+                        //$row .= '<td class="stats">-</td>';
+                    }
                 }
+                $row .= "</tr>";
+                $body .= $row . PHP_EOL;
             }
-            $row .= "</tr>";
-            $body .= $row . PHP_EOL;
+            return $body;
         }
-        return $body;
+        else if($type == "Excel(XLSX)"){
+            foreach($datas as $adm_rec => $data){
+                $row = array();
+                $row[] = $adm_rec;
+                
+                foreach($informationHeader as $column => $default){
+                    $row[] = $data[$column];
+                }
+                foreach($statsHeader as $date => $columns){
+                    if(isset($data['STATS'][$date])){
+                        foreach($columns as $column => $default){
+                            $row[] = $data['STATS'][$date][$column];
+                        }
+                    }
+                    else{
+                        $row[] = "0";
+                        $row[] = "0";
+                    }
+                }
+                $writer->addRow($row);
+            }
+        }
     }
 
     /*
@@ -397,11 +461,49 @@ class Dashboard{
 
     function export($type){
         if($type == "Excel(XLSX)"){
-            $datas = $this->getData();
-            $_SESSION['error'] = "Export uložen do složky s exporty.";
+            
+            // generate export filename
+            $filename = $this->createFileName($this->parameters, "_") . ".xlsx";
+            $filepath = $this->exportdir . "/" . $filename;
+            if(!file_exists($filepath)){
+                $writer = WriterFactory::create(Type::XLSX);
+                $writer->openToFile($filepath);
+                // generate header
+                $this->renderTableHeader($type, $writer);
+                // generate body
+                $this->renderTableBody($type, $writer);
+                $writer->close();
+                $_SESSION['error'] = "Export " . $filename . " uložen do složky s exporty.";
+            }
+            else{
+                $_SESSION['error'] = "Export již existuje ve složce s Exporty.";
+            }
         }
     }
+
+    /*
+    *   Recursive function for creating the export file name from given parameters
+    *   $array array Parameters from the search form
+    *   $separator string Separator for each parameter in the filename
+    *   Solution reused from https://stackoverflow.com/a/3900091/7364458
+    */
+    function createFileName($array, $separator){
+        $ret = "";
+
+        foreach($array as $item){
+            if (is_array($item)){
+                $ret .= $this->createFileName($item, $separator) . $separator;
+            }
+            else{
+                // solution for value false
+                $ret .= ($item ? $item : "0") . $separator;
+            }
+        }
+        $ret = substr($ret, 0, 0 - strlen($separator));
+        return $ret;
+    }
 }
+    
 
 $dashboard = new Dashboard();
 ?>
@@ -463,10 +565,10 @@ $dashboard = new Dashboard();
     <div id="container">
         <table>
             <thead>
-                <?php print_r($dashboard->renderTableHeader());?>
+                <?php print_r($dashboard->renderTableHeader("HTML"));?>
             </thead>
             <tbody>
-                <?php print_r($dashboard->renderTableBody());?>
+                <?php print_r($dashboard->renderTableBody("HTML"));?>
             </tbody>
         </table>
     </div>

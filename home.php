@@ -70,6 +70,28 @@ if($user->validate(LEVEL_ADMIN)){ ?>
             <a href="statistics.php"><button>Přejít</button></a>
         </p>
     </div>
+<hr/>
+    <div id="exports">
+        <h1>Uložené exporty</h1>
+        <ul>
+        <?php
+        // NEED TO SECURE DOWNLOAD THROUGH download.php
+        // SEE HERE https://stackoverflow.com/a/14025030/7364458
+        foreach($application->exports as $exportFile => $parameters){
+            echo "<li>";
+            echo "<a href=\"$application->exportdir/$exportFile\">$exportFile</a>";
+            echo "<ul>";
+            foreach($parameters as $parameter => $value){
+                echo "<li>";
+                echo "$parameter: " . $value;
+                echo "</li>";
+            }
+            echo "</ul>";
+            echo "</li>";
+        }
+        ?>
+        </ul>
+    </div>
 </div>
 </body>
 </html>
