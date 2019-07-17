@@ -508,21 +508,6 @@ class Dashboard{
 $dashboard = new Dashboard();
 ?>
 
-<html lang="cs">
-<head>
-  <meta charset="utf-8">
-
-  <title>Dashboard | Simple collection use counter</title>
-  <meta name="description" content="Collection usage counter">
-  <meta name="author" content="Dominik Bláha, blahad@sic.czu.cz">
-
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
-
-  <!--<link rel="stylesheet" href="css/styles.css?v=1.0">-->
-
-</head>
-
-<body>
 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" method="GET">
 <div id="forms-section">
     <h1>Nastavení</h1>    

@@ -51,20 +51,29 @@ echo "</pre>";*/
             .forEach(tr => tbody.appendChild(tr));
     })));
 }, false);
+  function hideLoader(){
+    document.getElementById("loader").style.display = "none";
+  }
   </script>
 </head>
-<body>
-
-<?php
+<body onLoad="hideLoader();">
+<!-- Loader -->
+<div id="loader"></div>
+<!-- Error MSG -->
+<div id="error_msg" class="error" <?php echo isset($_SESSION['error'])  ? "style=\"display:block;\"" :"" ; ?> >
+  <p>
+  <?php
   if (isset($_SESSION['error'])) {
-    echo '<div id="error_msg" class="error"><p>';
     echo $_SESSION['error'] . PHP_EOL;
     unset($_SESSION['error']);
-    echo '</p></div>';
   }
-
+  ?>
+  </p>
+</div>
+<!-- Menu -->
+<?php
   if(isset($_SESSION['user_login'])){
     echo '<a href="logout.php" class="menu"><button>Odhlásit</button></a>';
   }
-  echo '<a href="index.php" class="menu"><button>Domů</button></a>';
 ?>
+<a href="index.php" class="menu"><button>Domů</button></a>
