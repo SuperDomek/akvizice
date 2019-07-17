@@ -54,10 +54,11 @@ class Dashboard{
 
         $this->dateFormat = $format_conf['date_format'];
 
-        $this->getTimeDataHeader();
+        
 
         if(!empty($_GET)){
             $this->loadParameters();
+            $this->getTimeDataHeader();
             if(isset($_GET['export'])){
                 $source = $_SERVER['HTTP_REFERER'];
                 // filter the export from request from url so we don't loop
