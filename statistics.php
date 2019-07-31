@@ -365,7 +365,7 @@ class Dashboard{
     function getData(){
         $db = Database::getConnection();
         $show_zero_usage = false;
-        $filter = array(); // array for the select HAVING in case filter is on
+        $filter = null; // array for the select HAVING in case filter is on
         $where = array(
             'AND' => [
                 'date[<>]' => [$this->parameters['start'], $this->parameters['end']],
@@ -375,16 +375,13 @@ class Dashboard{
         );
         switch($this->parameters['table']){
             case 'all':
-                unset($filter);
                 $show_zero_usage = true;
                 break;
             case '90':
-                $filter['AVRG_LOANED[>=]'] = 90;
-                $where['HAVING'] = $filter;
+                $filter = 90;
                 break;
             case '10':
-                $filter['AVRG_LOANED[<=]'] = 10;
-                $where['HAVING'] = $filter;
+                $filter = 10;
                 $show_zero_usage = true;
                 break;
             default:
@@ -451,12 +448,33 @@ class Dashboard{
             $data[$adm_rec]['MIN'] = $min;
             $data[$adm_rec]['MAX'] = $max;
         }
-
+        if (isset($filter)){
+            $data = $this->filterData($data, $filter);
+        }
         //echo "<pre>";
         //print_r($select);
         //print_r($this->tableHeader);
         //print_r($data);
         //echo "</pre>";
+        return $data;
+    }
+
+    /*
+    *   Filters the returned data structure according to the filter chosen by the user
+    *   $datas array multidimensional data array
+    *   return array filtered data array
+    */
+    function filterData($data, $filter){
+        foreach($data as $adm_rec => $title){
+            if ($filter == 10){
+                if ($title['MAX'] >= $filter)
+                    unset($data[$adm_rec]);
+            }
+            else if ($filter == 90){
+                if ($title['MAX'] <= $filter)
+                    unset($data[$adm_rec]);
+            }
+        }
         return $data;
     }
 
