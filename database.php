@@ -1,4 +1,9 @@
-<?php require_once 'header.php';?>
+<?php //require_once 'header.php';
+if($_SERVER['SERVER_NAME'] == 'localhost')
+require_once $_SERVER['DOCUMENT_ROOT'] . '/akvizice/vendor/autoload.php'; // It must be called first
+else
+require_once $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php'; // It must be called first
+?>
 
 <?php
 /**

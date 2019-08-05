@@ -388,6 +388,8 @@ class Dashboard{
                 error_log("Unrecognized table filter parameter? " . $this->parameters['table']);
                 die("Unrecognized table filter parameter? " . $this->parameters['table']);
         }
+
+        //if ()
         $select = $db->select('usage',[
             '[>]titles' => 'ADM_REC'
         ],[
@@ -552,6 +554,11 @@ $dashboard = new Dashboard();
                 <option value="10" <?php echo ($dashboard->parameters['table'] == '10') ? "selected" : "";?>>Málo půjčované (10- %)</option>
             </select>
         <br/>
+        <label for="title_search">Vyberte konkrétní jednotku: </label>
+        <input size="50" id="title_search" list="titles-datalist" name="title_search" placeholder="ADM_REC, čár. kód, signatura, název, ISBN" autocomplete="off" />
+        <datalist id="titles-datalist">
+        </datalist>
+        <br/>
         <input type="submit" value="Odeslat"/>
 </div>
 <hr/>
@@ -564,6 +571,9 @@ $dashboard = new Dashboard();
     </div>
 <hr/>
 <div id="data">
+    <?php
+    if(!empty($_GET)){
+    ?>
     <input type="submit" name="export" class="menu" value="Excel(XLSX)"/>
     <h1>Data</h1>
     <div id="container">
@@ -576,6 +586,9 @@ $dashboard = new Dashboard();
             </tbody>
         </table>
     </div>
+    <?php
+    }
+    ?>
 </div>
 </form>
 </body>

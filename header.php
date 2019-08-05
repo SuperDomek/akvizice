@@ -34,7 +34,8 @@ echo "</pre>";*/
 
   <link rel="stylesheet" href="css/styles.css?v=1.1">
 
-  
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
   <script type="text/javascript">
     // solution for table sort
     // reused from https://stackoverflow.com/a/49041392/7364458
@@ -54,7 +55,32 @@ echo "</pre>";*/
   function hideLoader(){
     document.getElementById("loader").style.display = "none";
   }
-  </script>
+
+$(document).ready(function() {
+  $("#title_search").keyup(function() {
+  var dataList = $('#titles-datalist');
+  var input = $('#title_search');
+  if (input.val().length >= 3){ // start searching from 3 chars and more
+  // Create a new XMLHttpRequest.
+    $.ajax({
+      type: "GET",
+      dataType: 'json',
+      url: "searchtitle.php",
+      data: {
+        q: input.val()
+      },
+      success: function(json) {
+        dataList.empty(); //clearing the datalist after each search
+        $.each(json, function (idx, title){
+          var option = $("<option/>").text(idx + ' | ' + title.TITLE + ' | ' + title.CALL_NO).val(idx);
+          dataList.append(option);
+        });
+      }
+    });
+  }
+  });
+});
+</script>
 </head>
 <body onLoad="hideLoader();">
 <!-- Loader -->
