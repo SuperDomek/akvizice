@@ -386,7 +386,7 @@ class Dashboard{
         }
 
         // if user inputs title ADM_REC then search for it no matter the status
-        if(is_null($this->parameters['title'])){
+        if(empty($this->parameters['title'])){
             $where = array(
                 'AND' => [
                     'date[<>]' => [$this->parameters['start'], $this->parameters['end']],
@@ -404,6 +404,7 @@ class Dashboard{
                 'GROUP' => Medoo::raw('substr(date, 1,7),ADM_REC,status')
             );
             $show_zero_usage = false;
+            $filter = null;
         }
 
         $select = $db->select('usage',[
