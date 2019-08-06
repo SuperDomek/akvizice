@@ -29,7 +29,7 @@ if (isset($_GET["q"]) && strlen($q)>=3) {
             'titles.TITLE[~]' => $q,
             'titles.ISBN[~]' => $q
         ],
-        'GROUP' => ['ADM_REC']
+        'GROUP' => ['ADM_REC'],
     ]);
     //$hint = $select;
     $hint = array();

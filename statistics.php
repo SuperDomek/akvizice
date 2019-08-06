@@ -21,7 +21,8 @@ class Dashboard{
             STATUS_SKRIPTA => true
         ),
         'granularity' => 'month',
-        'table' => 'all'
+        'table' => 'all',
+        'title' => null
     );
     public $overview = array(
         'active_titles' => 0, // status not specific
@@ -90,6 +91,7 @@ class Dashboard{
                 $this->parameters['status'][STATUS_SKRIPTA] = true;
                 $this->parameters['status'][STATUS_ABSENCNE] = true;
             }
+            $this->parameters['title'] = $this->testInput($_GET['title_search']);
             $this->parameters['granularity'] = $this->testInput($_GET["granularity"]);
             $this->parameters['table'] = $this->testInput($_GET["table"]);
           }
@@ -366,13 +368,7 @@ class Dashboard{
         $db = Database::getConnection();
         $show_zero_usage = false;
         $filter = null; // array for the select HAVING in case filter is on
-        $where = array(
-            'AND' => [
-                'date[<>]' => [$this->parameters['start'], $this->parameters['end']],
-                'STATUS' => array_keys($this->parameters['status'], true, true)
-            ],
-            'GROUP' => Medoo::raw('substr(date, 1,7),ADM_REC,status')
-        );
+
         switch($this->parameters['table']){
             case 'all':
                 $show_zero_usage = true;
@@ -389,7 +385,27 @@ class Dashboard{
                 die("Unrecognized table filter parameter? " . $this->parameters['table']);
         }
 
-        //if ()
+        // if user inputs title ADM_REC then search for it no matter the status
+        if(is_null($this->parameters['title'])){
+            $where = array(
+                'AND' => [
+                    'date[<>]' => [$this->parameters['start'], $this->parameters['end']],
+                    'STATUS' => array_keys($this->parameters['status'], true, true)
+                ],
+                'GROUP' => Medoo::raw('substr(date, 1,7),ADM_REC,status')
+            );
+        }
+        else{
+            $where = array(
+                'AND' => [
+                    'date[<>]' => [$this->parameters['start'], $this->parameters['end']],
+                    'usage.ADM_REC' => $this->parameters['title']
+                ],
+                'GROUP' => Medoo::raw('substr(date, 1,7),ADM_REC,status')
+            );
+            $show_zero_usage = false;
+        }
+
         $select = $db->select('usage',[
             '[>]titles' => 'ADM_REC'
         ],[
@@ -555,7 +571,7 @@ $dashboard = new Dashboard();
             </select>
         <br/>
         <label for="title_search">Vyberte konkrétní jednotku: </label>
-        <input size="50" id="title_search" list="titles-datalist" name="title_search" placeholder="ADM_REC, čár. kód, signatura, název, ISBN" autocomplete="off" />
+        <input type="text" size="50" id="title_search" list="titles-datalist" name="title_search" placeholder="ADM_REC, čár. kód, signatura, název, ISBN" autocomplete="off" value="<?php echo $dashboard->parameters['title'];?>" />
         <datalist id="titles-datalist">
         </datalist>
         <br/>
