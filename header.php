@@ -72,7 +72,7 @@ $(document).ready(function() {
       success: function(json) {
         dataList.empty(); //clearing the datalist after each search
         $.each(json, function (idx, title){
-          var option = $("<option/>").text(idx + ' | ' + title.TITLE + ' | ' + title.CALL_NO).val(idx);
+          var option = $("<option/>").text(idx + ' | ' + title.TITLE + ' | ' + title.CALL_NO + ' | ' + title.BARCODE + ' | ' + title.ISBN).val(idx);
           dataList.append(option);
         });
       }
