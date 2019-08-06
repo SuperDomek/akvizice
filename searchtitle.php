@@ -30,6 +30,7 @@ if (isset($_GET["q"]) && strlen($q)>=3) {
             'titles.ISBN[~]' => $q
         ],
         'GROUP' => ['ADM_REC'],
+        'LIMIT' => 30
     ]);
     //$hint = $select;
     $hint = array();
