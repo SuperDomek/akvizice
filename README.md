@@ -28,7 +28,8 @@ KNOWN PROBLEMS
  - If during a catalogue life cycle a unit is removed and then added again after some time the app doesn't reflect that. The app doesn't store unit life cycle history. It stores only a date of creation and a date of deletion. It's up to the user which dates are chosen when exporting catalogue data.
 
 TO DO:
-1) Simple user management
-2) Optimize speed (if possible)
-3) Export statistics to csv or xlsx
-4) Add Min and Max value for the selected period
+- Add publication year to the visualisation
+- How to reflect titles that had already some units discarded? Is it necessary?
+- Running Count deletes already done exports
+- Optimize speed (if possible)
+- Simple user management
