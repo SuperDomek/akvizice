@@ -1,7 +1,7 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
     "content-hash": "6181da9cea796a36b6933132f994650a",
@@ -76,16 +76,16 @@
         },
         {
             "name": "catfan/medoo",
-            "version": "v1.7.2",
+            "version": "v1.7.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/catfan/Medoo.git",
-                "reference": "b9dfce4046f3eb48a647ef72991bb65012f99376"
+                "reference": "3b28d9469fd3f6f6e9c1106ec4342111ab2b50c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/catfan/Medoo/zipball/b9dfce4046f3eb48a647ef72991bb65012f99376",
-                "reference": "b9dfce4046f3eb48a647ef72991bb65012f99376",
+                "url": "https://api.github.com/repos/catfan/Medoo/zipball/3b28d9469fd3f6f6e9c1106ec4342111ab2b50c4",
+                "reference": "3b28d9469fd3f6f6e9c1106ec4342111ab2b50c4",
                 "shasum": ""
             },
             "require": {
@@ -132,7 +132,11 @@
                 "sql",
                 "sqlite"
             ],
-            "time": "2019-07-13T14:52:50+00:00"
+            "support": {
+                "issues": "https://github.com/catfan/Medoo/issues",
+                "source": "https://github.com/catfan/Medoo"
+            },
+            "time": "2019-10-12T13:13:11+00:00"
         },
         {
             "name": "phlak/config",
@@ -300,5 +304,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.1.0"
 }
